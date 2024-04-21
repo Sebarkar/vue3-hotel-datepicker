@@ -1,0 +1,58 @@
+{
+  "name": "@sebarkar/vue3-hotels-datepicker",
+  "private": false,
+  "version": "0.0.2",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sebarkar/vue3-hotels-datepicker.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "main": "./dist/vue3-hotel-date-picker.umd.cjs",
+  "module": "./dist/vue3-hotel-date-picker.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/vue3-hotel-date-picker.js",
+      "require": "./dist/vue3-hotel-date-picker.umd.cjs"
+    },
+    "./dist/style.css": {
+      "import": "./dist/style.css",
+      "require": "./dist/style.css"
+    }
+  },
+  "keywords": [
+    "datepicker",
+    "vue3-datepicker",
+    "hotel-datepicker",
+    "vue3",
+    "vue",
+    "vuejs"
+  ],
+  "files": [
+    "dist",
+    "src/components/"
+  ],
+  "dependencies": {
+    "fecha": "^4.0.0",
+    "vue": "^3.4.21"
+  },
+  "devDependencies": {
+    "@highlightjs/vue-plugin": "^2.1.0",
+    "@iconify/vue": "^4.1.2",
+    "@vitejs/plugin-vue": "^5.0.4",
+    "date-fns": "^3.6.0",
+    "path": "^0.12.7",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "vite-plugin-dts": "^3.8.3",
+    "vue-tsc": "^2.0.6"
+  }
+}
