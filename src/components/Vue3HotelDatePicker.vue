@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import * as fecha from "fecha";
 import {onMounted, onUnmounted, reactive, ref, watch, computed} from "vue";
 
@@ -126,7 +126,7 @@ const setFechaI18n = () => {
 }
 
 const emits = defineEmits({
-  select: (e: { start: number, end: number }) => true
+  select: ({ start, end }) => true
 })
 
 const getValuesLocal = () => {
@@ -160,7 +160,7 @@ const input = ref(null);
 const lastDisabledDate = ref(null);
 const daysWithExtraText = ref([]);
 // Store the datepicker month object for later
-const months: any = ref({});
+const months = ref({});
 const isFirstDisabledDate = ref(0);
 const submitButton = ref(null);
 const clearButton = ref(null);
@@ -212,7 +212,7 @@ const getWeekDayNames = () => {
   return week;
 }
 
-const getMonthName = (m: Number) => {
+const getMonthName = (m) => {
   // Get month name
   return lang("month-names")[m];
 }
@@ -289,7 +289,7 @@ const init = () => {
 const addMonth = (date, month) => {
   //Avoid mutating properties in original Date Object by linking it to the new object
   date = new Date(date);
-  let monthInstance: any = {
+  let monthInstance = {
     name: getMonthName(date.getMonth()),
     month: date.getMonth(),
     year: date.getFullYear(),
@@ -311,7 +311,7 @@ const addMonth = (date, month) => {
   // Store current month dates
   months.value["month" + month] = date;
 }
-const createMonthObject = (_date: Date) => {
+const createMonthObject = (_date) => {
   const days = [];
   const result = [];
   let valid;
@@ -1215,7 +1215,6 @@ const showPopover = (event, day) => {
   if (!selectedDatesTmp.value.start || selectedDatesTmp.value.start && selectedDatesTmp.value.end || !selectionAllowed(day)) {
     return false;
   }
-  console.log('ds')
   popup.show = true;
   const parentRect = parent.value.getBoundingClientRect();
   const childRect = event.target.getBoundingClientRect();

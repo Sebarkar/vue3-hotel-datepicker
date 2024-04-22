@@ -1,5 +1,5 @@
-<script setup lang="ts">
-import Vue3HotelDatePicker from "@/components/Vue3HotelDatePicker.vue";
+<script setup>
+import Vue3HotelDatePicker from "./components/Vue3HotelDatePicker.vue";
 import { Icon } from '@iconify/vue';
 import { eachDayOfInterval, addDays, differenceInCalendarDays, endOfMonth, addMonths, format } from "date-fns";
 import {ref} from "vue";
