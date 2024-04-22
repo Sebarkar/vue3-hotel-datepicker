@@ -5,7 +5,7 @@ import dts from "vite-plugin-dts";
 
 export default defineConfig({
     plugins: [vue(), dts()],
-    base: "/",
+    base: '/vue3-hotel-datepicker/',
     build: {
         lib: {
             entry: path.resolve(__dirname, "src/index.js"),
