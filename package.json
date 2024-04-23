@@ -2,7 +2,7 @@
   "name": "@sebarkar/vue3-hotel-datepicker",
   "homepage": "http://.github.io/sebarkar/vue3-hotel-datepicker",
   "private": false,
-  "version": "0.0.3",
+  "version": "0.0.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,6 +12,9 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sebarkar/vue3-hotel-datepicker.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
   },
   "main": "./dist/main.umd.cjs",
   "module": "./dist/main.js",

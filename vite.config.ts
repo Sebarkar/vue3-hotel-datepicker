@@ -7,10 +7,7 @@ export default defineConfig({
     plugins: [vue(), dts()],
     build: {
         lib: {
-            entry: [
-                path.resolve(__dirname, "src/index.js"),
-                path.resolve(__dirname, "index.html")
-            ],
+            entry: path.resolve(__dirname, "src/index.js"),
             name: "Vue3HotelDatePicker",
             fileName: 'main'
         },
