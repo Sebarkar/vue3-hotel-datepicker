@@ -2,27 +2,24 @@
   "name": "@sebarkar/vue3-hotel-datepicker",
   "homepage": "http://.github.io/sebarkar/vue3-hotel-datepicker",
   "private": false,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build --base=./",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sebarkar/vue3-hotel-datepicker.git"
   },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
-  },
-  "main": "./dist/vue3-hotel-date-picker.umd.cjs",
-  "module": "./dist/vue3-hotel-date-picker.js",
+  "main": "./dist/main.umd.cjs",
+  "module": "./dist/main.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/vue3-hotel-date-picker.js",
-      "require": "./dist/vue3-hotel-date-picker.umd.cjs"
+      "import": "./dist/main.js",
+      "require": "./dist/main.umd.cjs"
     },
     "./dist/style.css": {
       "import": "./dist/style.css",
