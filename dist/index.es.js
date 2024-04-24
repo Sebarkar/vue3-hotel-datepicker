@@ -1,4 +1,4 @@
-import { ref as d, computed as ht, reactive as dt, watch as mt, onUnmounted as vt, onMounted as Dt, openBlock as H, createElementBlock as _, createElementVNode as Z, normalizeClass as X, normalizeStyle as gt, renderSlot as G, createTextVNode as q, toDisplayString as ee, Fragment as pe, renderList as Me, createCommentVNode as _e } from "vue";
+import { ref as h, computed as dt, reactive as ht, watch as mt, onUnmounted as vt, onMounted as Dt, openBlock as B, createElementBlock as H, createElementVNode as Z, normalizeClass as X, normalizeStyle as gt, renderSlot as G, createTextVNode as q, toDisplayString as ee, Fragment as pe, renderList as Me, createCommentVNode as He } from "vue";
 var ze = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|Z|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g, E = "\\d\\d?", P = "\\d\\d", pt = "\\d{3}", Mt = "\\d{4}", te = "[^\\s]+", Ze = /\[([^]*?)\]/gm;
 function Le(a, r) {
   for (var n = [], g = 0, u = a.length; g < u; g++)
@@ -18,8 +18,8 @@ function L(a) {
     r[n - 1] = arguments[n];
   for (var g = 0, u = r; g < u.length; g++) {
     var O = u[g];
-    for (var I in O)
-      a[I] = O[I];
+    for (var C in O)
+      a[C] = O[C];
   }
   return a;
 }
@@ -53,20 +53,20 @@ var Re = [
   DoFn: function(a) {
     return a + ["th", "st", "nd", "rd"][a % 10 > 3 ? 0 : (a - a % 10 !== 10 ? 1 : 0) * a % 10];
   }
-}, oe = L({}, Ue), Yt = function(a) {
+}, oe = L({}, Ue), kt = function(a) {
   return oe = L(oe, a);
 }, Fe = function(a) {
   return a.replace(/[|\\{()[^$+*?.-]/g, "\\$&");
-}, k = function(a, r) {
+}, Y = function(a, r) {
   for (r === void 0 && (r = 2), a = String(a); a.length < r; )
     a = "0" + a;
   return a;
-}, kt = {
+}, Yt = {
   D: function(a) {
     return String(a.getDate());
   },
   DD: function(a) {
-    return k(a.getDate());
+    return Y(a.getDate());
   },
   Do: function(a, r) {
     return r.DoFn(a.getDate());
@@ -75,7 +75,7 @@ var Re = [
     return String(a.getDay());
   },
   dd: function(a) {
-    return k(a.getDay());
+    return Y(a.getDay());
   },
   ddd: function(a, r) {
     return r.dayNamesShort[a.getDay()];
@@ -87,7 +87,7 @@ var Re = [
     return String(a.getMonth() + 1);
   },
   MM: function(a) {
-    return k(a.getMonth() + 1);
+    return Y(a.getMonth() + 1);
   },
   MMM: function(a, r) {
     return r.monthNamesShort[a.getMonth()];
@@ -96,43 +96,43 @@ var Re = [
     return r.monthNames[a.getMonth()];
   },
   YY: function(a) {
-    return k(String(a.getFullYear()), 4).substr(2);
+    return Y(String(a.getFullYear()), 4).substr(2);
   },
   YYYY: function(a) {
-    return k(a.getFullYear(), 4);
+    return Y(a.getFullYear(), 4);
   },
   h: function(a) {
     return String(a.getHours() % 12 || 12);
   },
   hh: function(a) {
-    return k(a.getHours() % 12 || 12);
+    return Y(a.getHours() % 12 || 12);
   },
   H: function(a) {
     return String(a.getHours());
   },
   HH: function(a) {
-    return k(a.getHours());
+    return Y(a.getHours());
   },
   m: function(a) {
     return String(a.getMinutes());
   },
   mm: function(a) {
-    return k(a.getMinutes());
+    return Y(a.getMinutes());
   },
   s: function(a) {
     return String(a.getSeconds());
   },
   ss: function(a) {
-    return k(a.getSeconds());
+    return Y(a.getSeconds());
   },
   S: function(a) {
     return String(Math.round(a.getMilliseconds() / 100));
   },
   SS: function(a) {
-    return k(Math.round(a.getMilliseconds() / 10), 2);
+    return Y(Math.round(a.getMilliseconds() / 10), 2);
   },
   SSS: function(a) {
-    return k(a.getMilliseconds(), 3);
+    return Y(a.getMilliseconds(), 3);
   },
   a: function(a, r) {
     return a.getHours() < 12 ? r.amPm[0] : r.amPm[1];
@@ -142,11 +142,11 @@ var Re = [
   },
   ZZ: function(a) {
     var r = a.getTimezoneOffset();
-    return (r > 0 ? "-" : "+") + k(Math.floor(Math.abs(r) / 60) * 100 + Math.abs(r) % 60, 4);
+    return (r > 0 ? "-" : "+") + Y(Math.floor(Math.abs(r) / 60) * 100 + Math.abs(r) % 60, 4);
   },
   Z: function(a) {
     var r = a.getTimezoneOffset();
-    return (r > 0 ? "-" : "+") + k(Math.floor(Math.abs(r) / 60), 2) + ":" + k(Math.abs(r) % 60, 2);
+    return (r > 0 ? "-" : "+") + Y(Math.floor(Math.abs(r) / 60), 2) + ":" + Y(Math.abs(r) % 60, 2);
   }
 }, We = function(a) {
   return +a - 1;
@@ -228,17 +228,17 @@ var Re = [
     throw new Error("Invalid Date pass to format");
   r = ie[r] || r;
   var g = [];
-  r = r.replace(Ze, function(O, I) {
-    return g.push(I), "@@@";
+  r = r.replace(Ze, function(O, C) {
+    return g.push(C), "@@@";
   });
   var u = L(L({}, oe), n);
   return r = r.replace(ze, function(O) {
-    return kt[O](a, u);
+    return Yt[O](a, u);
   }), r.replace(/@@@/g, function() {
     return g.shift();
   });
 };
-function Ct(a, r, n) {
+function _t(a, r, n) {
   if (n === void 0 && (n = {}), typeof r != "string")
     throw new Error("Invalid format in fecha parse");
   if (r = ie[r] || r, a.length > 1e3)
@@ -253,8 +253,8 @@ function Ct(a, r, n) {
     millisecond: 0,
     isPm: null,
     timezoneOffset: null
-  }, O = [], I = [], A = r.replace(Ze, function(v, i) {
-    return I.push(Fe(i)), "@@@";
+  }, O = [], C = [], A = r.replace(Ze, function(v, i) {
+    return C.push(Fe(i)), "@@@";
   }), R = {}, V = {};
   A = Fe(A).replace(ze, function(v) {
     var i = wt[v], z = i[0], ue = i[1], ae = i[3];
@@ -265,7 +265,7 @@ function Ct(a, r, n) {
     if (!R[v])
       throw new Error("Invalid format. " + v + " is required in specified format");
   }), A = A.replace(/@@@/g, function() {
-    return I.shift();
+    return C.shift();
   });
   var w = a.match(new RegExp(A, "i"));
   if (!w)
@@ -277,35 +277,35 @@ function Ct(a, r, n) {
     u[M] = ne;
   }
   u.isPm === 1 && u.hour != null && +u.hour != 12 ? u.hour = +u.hour + 12 : u.isPm === 0 && +u.hour == 12 && (u.hour = 0);
-  var T;
+  var I;
   if (u.timezoneOffset == null) {
-    T = new Date(u.year, u.month, u.day, u.hour, u.minute, u.second, u.millisecond);
-    for (var N = [
+    I = new Date(u.year, u.month, u.day, u.hour, u.minute, u.second, u.millisecond);
+    for (var T = [
       ["month", "getMonth"],
       ["day", "getDate"],
       ["hour", "getHours"],
       ["minute", "getMinutes"],
       ["second", "getSeconds"]
-    ], c = 0, m = N.length; c < m; c++)
-      if (R[N[c][0]] && u[N[c][0]] !== T[N[c][1]]())
+    ], c = 0, m = T.length; c < m; c++)
+      if (R[T[c][0]] && u[T[c][0]] !== I[T[c][1]]())
         return null;
-  } else if (T = new Date(Date.UTC(u.year, u.month, u.day, u.hour, u.minute - u.timezoneOffset, u.second, u.millisecond)), u.month > 11 || u.month < 0 || u.day > 31 || u.day < 1 || u.hour > 23 || u.hour < 0 || u.minute > 59 || u.minute < 0 || u.second > 59 || u.second < 0)
+  } else if (I = new Date(Date.UTC(u.year, u.month, u.day, u.hour, u.minute - u.timezoneOffset, u.second, u.millisecond)), u.month > 11 || u.month < 0 || u.day > 31 || u.day < 1 || u.hour > 23 || u.hour < 0 || u.minute > 59 || u.minute < 0 || u.second > 59 || u.second < 0)
     return null;
-  return T;
+  return I;
 }
-var C = {
+var _ = {
   format: Ot,
-  parse: Ct,
+  parse: _t,
   defaultI18n: Ue,
-  setGlobalDateI18n: Yt,
+  setGlobalDateI18n: kt,
   setGlobalDateMasks: St
 };
-const It = (a, r) => {
+const Ct = (a, r) => {
   const n = a.__vccOpts || a;
   for (const [g, u] of r)
     n[g] = u;
   return n;
-}, Tt = { style: { "pointer-events": "none" } }, Nt = { class: "month_control_panel" }, xt = { class: "month_control_item" }, Bt = ["onClick"], Ht = { class: "month_control_item" }, _t = { class: "month_control_item" }, Vt = ["onClick"], Ft = { class: "month_box" }, Wt = { class: "week_name" }, Pt = ["onClick", "onMouseover"], Et = {
+}, It = { style: { "pointer-events": "none" } }, Tt = { class: "month_control_panel" }, Nt = { class: "month_control_item" }, xt = ["onClick"], Bt = { class: "month_control_item" }, Ht = { class: "month_control_item" }, Vt = ["onClick"], Ft = { class: "month_box" }, Wt = { class: "week_name" }, Pt = ["onClick", "onMouseover"], Et = {
   __name: "Vue3HotelDatePicker",
   props: {
     format: {
@@ -394,25 +394,25 @@ const It = (a, r) => {
     selected: ({ start: a, end: r }) => !0
   },
   setup(a, { emit: r }) {
-    const n = a, g = r, u = d(!0);
-    d(!1);
-    const O = d(!1), I = d(!1), A = d(!1), R = d(!1), V = d(n.maxNights), w = d(n.minNights), f = d(n.startDate ?? !1), c = d(n.endDate ?? !1);
-    d(null);
-    const F = d(null), M = d({}), $ = d(0);
-    d(null);
-    const ne = d(null);
-    O.value = !1, I.value = !1, A.value = !1, R.value = !1;
-    const T = d(n.startDate), N = d(n.endDate), m = d([]), v = d({
+    const n = a, g = r, u = h(!0);
+    h(!1);
+    const O = h(!1), C = h(!1), A = h(!1), R = h(!1), V = h(n.maxNights), w = h(n.minNights), f = h(n.startDate ?? !1), c = h(n.endDate ?? !1);
+    h(null);
+    const F = h(null), M = h({}), $ = h(0);
+    h(null);
+    const ne = h(null);
+    O.value = !1, C.value = !1, A.value = !1, R.value = !1;
+    const I = h(n.startDate), T = h(n.endDate), m = h([]), v = h({
       start: null,
       end: null
-    }), i = d({
+    }), i = h({
       months: [],
       open: !0,
       submitButton: !1,
       clearButton: !1,
       showSingleMonth: n.showSingleMonth
     });
-    ht({
+    dt({
       error: !1,
       textContent: "",
       show: !1
@@ -435,12 +435,12 @@ const It = (a, r) => {
       return new Date(t.setMonth(t.getMonth() - 1, 1));
     }, y = (e, t = null) => {
       let l = t ?? n.format;
-      return C.format(e, l);
+      return _.format(e, l);
     }, K = (e, t = null) => {
       let l = t ?? n.format;
-      return C.parse(e, l);
+      return _.parse(e, l);
     }, je = () => {
-      w.value = n.minNights > 1 ? n.minNights + 1 : 2, V.value = n.maxNights > 0 ? n.maxNights + 1 : 0, n.startDate && typeof n.startDate == "string" && (T.value = K(n.startDate)), n.endDate && typeof n.endDate == "string" && (N.value = K(N.value)), n.disabledDates.length > 0 && rt(), n.disabledDaysOfWeek.length > 0 && ot(), T.value && N.value ? ut(T.value, N.value) : Ye(), ne.value && (u.value || !f.value && !c.value) && (i.value.clearButton = !0), $.value = 0, F.value = !1;
+      w.value = n.minNights > 1 ? n.minNights + 1 : 2, V.value = n.maxNights > 0 ? n.maxNights + 1 : 0, n.startDate && typeof n.startDate == "string" && (I.value = K(n.startDate)), n.endDate && typeof n.endDate == "string" && (T.value = K(T.value)), n.disabledDates.length > 0 && rt(), n.disabledDaysOfWeek.length > 0 && ot(), I.value && T.value ? ut(I.value, T.value) : ke(), ne.value && (u.value || !f.value && !c.value) && (i.value.clearButton = !0), $.value = 0, F.value = !1;
     }, W = (e, t) => {
       e = new Date(e);
       let l = {
@@ -452,7 +452,7 @@ const It = (a, r) => {
         nextBtn: !0,
         prevBtn: !0
       };
-      e.setHours(0, 0, 0, 0), l.days = Ge(e), i.value.months.splice(t - 1, 1, l), Ce(), M.value["month" + t] = e;
+      e.setHours(0, 0, 0, 0), l.days = Ge(e), i.value.months.splice(t - 1, 1, l), _e(), M.value["month" + t] = e;
     }, ye = {
       date: {},
       type: "",
@@ -477,50 +477,50 @@ const It = (a, r) => {
       const D = e.getMonth();
       if (o === 0 && n.startOfWeek === "monday" && (o = 7), o > 0)
         for (let p = o; p > 0; p--) {
-          const h = new Date(e.getTime() - 864e5 * p);
-          s = le(h.getTime()), (n.minDate && b(h, n.minDate) < 0 || n.maxDate && b(h, n.maxDate) > 0) && (s = !1), t.push(
+          const d = new Date(e.getTime() - 864e5 * p);
+          s = le(d.getTime()), (n.minDate && b(d, n.minDate) < 0 || n.maxDate && b(d, n.maxDate) > 0) && (s = !1), t.push(
             Object.assign({}, ye, {
-              date: h,
+              date: d,
               type: "lastMonth",
-              day: h.getDate(),
-              time: h.getTime(),
+              day: d.getDate(),
+              time: d.getTime(),
               isValid: s
             })
           );
         }
       for (let p = 0; p < 40; p++) {
-        const h = Q(e, p);
-        s = le(h.getTime()), (n.minDate && b(h, n.minDate) < 0 || n.maxDate && b(h, n.maxDate) > 0) && (s = !1), t.push(Object.assign({}, ye, {
-          date: h,
-          type: h.getMonth() === D ? "visibleMonth" : "nextMonth",
-          day: h.getDate(),
-          time: h.getTime(),
-          isCurrentMonth: h.getMonth() === D,
+        const d = Q(e, p);
+        s = le(d.getTime()), (n.minDate && b(d, n.minDate) < 0 || n.maxDate && b(d, n.maxDate) > 0) && (s = !1), t.push(Object.assign({}, ye, {
+          date: d,
+          type: d.getMonth() === D ? "visibleMonth" : "nextMonth",
+          day: d.getDate(),
+          time: d.getTime(),
+          isCurrentMonth: d.getMonth() === D,
           isValid: s
         }));
       }
       for (let p = 0; p < 6 && t[p * 7].type !== "nextMonth"; p++)
-        for (let h = 0; h < 7; h++) {
-          let S = n.startOfWeek === "monday" ? h + 1 : h;
+        for (let d = 0; d < 7; d++) {
+          let S = n.startOfWeek === "monday" ? d + 1 : d;
           S = t[p * 7 + S], l.push(be(S));
         }
       return l;
     }, be = (e) => {
       const t = y(e.time) === y(/* @__PURE__ */ new Date()), l = y(e.time) === y(n.minDate);
-      let s = !1, o = !1, D = !1, p = !1, h = !1, S = !1;
+      let s = !1, o = !1, D = !1, p = !1, d = !1, S = !1;
       if (e.valid || e.type === "visibleMonth") {
         const De = y(e.time, "YYYY-MM-DD");
         if (n.disabledDates.length > 0) {
-          const B = Te(e.date);
-          if (B[0] === !1 && (B[0] = Se(T.value, 1)), B[0] && B[1] && b(e.date, B[0]) && x(B[0], B[1]) - 2 > 0) {
-            const ge = x(B[1], e.date) - 1, ct = x(e.date, B[0]) - 1;
+          const x = Ie(e.date);
+          if (x[0] === !1 && (x[0] = Se(I.value, 1)), x[0] && x[1] && b(e.date, x[0]) && N(x[0], x[1]) - 2 > 0) {
+            const ge = N(x[1], e.date) - 1, ct = N(e.date, x[0]) - 1;
             (n.selectForward && ge < w.value || !n.selectForward && ge < w.value && ct < w.value) && (e.isValid = !1), !e.isValid && n.enableCheckout && ge === 2 && (S = !0);
           }
-          n.disabledDates.indexOf(De) > -1 ? (e.isValid = !1, s = !0, $.value++, F.value = e.date) : $.value = 0, e.isValid && F.value && b(e.date, F.value) > 0 && x(e.date, F.value) === 2 && (h = !0);
+          n.disabledDates.indexOf(De) > -1 ? (e.isValid = !1, s = !0, $.value++, F.value = e.date) : $.value = 0, e.isValid && F.value && b(e.date, F.value) > 0 && N(e.date, F.value) === 2 && (d = !0);
         }
-        n.disabledDaysOfWeek.length > 0 && n.disabledDaysOfWeek.indexOf(C.format(e.time, "dddd")) > -1 && (e.isValid = !1, p = !0), n.noCheckInDates.length > 0 && n.noCheckInDates.indexOf(De) > -1 && (o = !0, h = !1), n.noCheckOutDates.length > 0 && n.noCheckOutDates.indexOf(De) > -1 && (D = !0), n.noCheckInDaysOfWeek.length > 0 && n.noCheckInDaysOfWeek.indexOf(C.format(e.time, "dddd")) > -1 && (o = !0, h = !1), n.noCheckOutDaysOfWeek.length > 0 && n.noCheckOutDaysOfWeek.indexOf(C.format(e.time, "dddd")) > -1 && (D = !0);
+        n.disabledDaysOfWeek.length > 0 && n.disabledDaysOfWeek.indexOf(_.format(e.time, "dddd")) > -1 && (e.isValid = !1, p = !0), n.noCheckInDates.length > 0 && n.noCheckInDates.indexOf(De) > -1 && (o = !0, d = !1), n.noCheckOutDates.length > 0 && n.noCheckOutDates.indexOf(De) > -1 && (D = !0), n.noCheckInDaysOfWeek.length > 0 && n.noCheckInDaysOfWeek.indexOf(_.format(e.time, "dddd")) > -1 && (o = !0, d = !1), n.noCheckOutDaysOfWeek.length > 0 && n.noCheckOutDaysOfWeek.indexOf(_.format(e.time, "dddd")) > -1 && (D = !0);
       }
-      return e.isToday = t, e.isDisabled = s, e.isCheckOutEnabled = s && n.enableCheckout && $.value === 1, e.isDayBeforeDisabledDate = S, e.isCheckInOnly = l || h, e.isNoCheckIn = o, e.isNoCheckOut = D, e.isDayOfWeekDisabled = p, e;
+      return e.isToday = t, e.isDisabled = s, e.isCheckOutEnabled = s && n.enableCheckout && $.value === 1, e.isDayBeforeDisabledDate = S, e.isCheckInOnly = l || d, e.isNoCheckIn = o, e.isNoCheckOut = D, e.isDayOfWeekDisabled = p, e;
     }, qe = () => {
       for (let e = 0; e < i.value.months.length; e++)
         for (let t = 0; t < i.value.months[e].days.length; t++) {
@@ -528,7 +528,7 @@ const It = (a, r) => {
           let o;
           o = le(s.getTime()), (n.minDate && b(s, n.minDate) < 0 || n.maxDate && b(s, n.maxDate) > 0) && (o = !1), i.value.months[e].days[t].isValid = o, i.value.months[e].days[t] = be(i.value.months[e].days[t]);
         }
-    }, Ye = () => {
+    }, ke = () => {
       W(n.minDate, 1), W(J(n.minDate), 2), j();
     }, Ke = (e, t, ...l) => {
       if (l.length > 0 && l[0] !== void 0 && l[0], e.getTime() > t.getTime()) {
@@ -537,7 +537,7 @@ const It = (a, r) => {
       }
       let s = !0;
       if ((n.minDate && b(e, n.minDate) < 0 || n.maxDate && b(t, n.maxDate) > 0) && (s = !1), !s) {
-        Ye();
+        ke();
         return;
       }
       e.setTime(e.getTime() + 12 * 60 * 60 * 1e3), t.setTime(t.getTime() + 12 * 60 * 60 * 1e3), f.value = e.getTime(), c.value = t.getTime(), b(e, t) > 0 && re(e, t) === 0 && (t = J(e)), re(e, t) === 0 && (t = J(e)), W(e, 1), W(t, 2), se(), j(), we();
@@ -558,11 +558,11 @@ const It = (a, r) => {
             return;
         } else if (f.value && (f.value > s && e.isNoCheckIn || v.value.start && v.value.start.isNoCheckIn && f.value > s || e.isNoCheckOut && s > f.value))
           return;
-        if (l ? (v.value.start = e, f.value = s, c.value = !1) : f.value && (v.value.end = e, c.value = s, Ne()), f.value && c.value && f.value > c.value) {
+        if (l ? (v.value.start = e, f.value = s, c.value = !1) : f.value && (v.value.end = e, c.value = s, Te()), f.value && c.value && f.value > c.value) {
           const o = c.value;
           c.value = f.value, f.value = o;
         }
-        f.value = parseInt(f.value, 10), c.value = parseInt(c.value, 10), lt(), f.value && !c.value && Ie(e), Ce(), we(), f.value && c.value && qe(), se(), c.value && g("selected", { start: f.value, end: c.value }), v.value.end && Xe();
+        f.value = parseInt(f.value, 10), c.value = parseInt(c.value, 10), lt(), f.value && !c.value && Ce(e), _e(), we(), f.value && c.value && qe(), se(), c.value && g("selected", { start: f.value, end: c.value }), v.value.end && Xe();
       }
     }, Xe = () => {
       v.value.start = null, v.value.end = null;
@@ -570,10 +570,10 @@ const It = (a, r) => {
       if (e = parseInt(e, 10), n.minDate && b(e, n.minDate) < 0 || n.maxDate && b(e, n.maxDate) > 0)
         return !1;
       if (f.value && !c.value) {
-        if (V.value > 0 && x(e, f.value) > V.value || w.value > 0 && x(e, f.value) > 1 && x(e, f.value) < w.value || n.selectForward && e < f.value)
+        if (V.value > 0 && N(e, f.value) > V.value || w.value > 0 && N(e, f.value) > 1 && N(e, f.value) < w.value || n.selectForward && e < f.value)
           return !1;
         if (n.disabledDates.length > 0) {
-          const t = Te(new Date(parseInt(f.value, 10)));
+          const t = Ie(new Date(parseInt(f.value, 10)));
           if (t[0] && b(e, t[0]) <= 0 || t[1] && b(e, t[1]) >= 0)
             return !1;
         }
@@ -584,21 +584,21 @@ const It = (a, r) => {
         }
       }
       return !0;
-    }, ke = () => {
+    }, Ye = () => {
       for (let e = 0; e < i.value.months.length; e++)
         for (let t = 0; t < i.value.months[e].days.length; t++)
           i.value.months[e].days[t].selected = !1, i.value.months[e].days[t].isFirstDaySelected = !1, i.value.months[e].days[t].isLastDaySelected = !1;
       return !0;
     }, we = () => {
-      const e = x(c.value, f.value);
-      (V.value && e > V.value || w.value && e < w.value) && (f.value = !1, c.value = !1, ke());
+      const e = N(c.value, f.value);
+      (V.value && e > V.value || w.value && e < w.value) && (f.value = !1, c.value = !1, Ye());
     }, Q = (e, t) => {
       const l = new Date(e);
       return l.setDate(l.getDate() + t), l;
     }, Se = (e, t) => {
       const l = new Date(e);
       return l.setDate(l.getDate() - t), l;
-    }, x = (e, t) => Math.abs(Oe(e) - Oe(t)) + 1, b = (e, t) => {
+    }, N = (e, t) => Math.abs(Oe(e) - Oe(t)) + 1, b = (e, t) => {
       const l = parseInt(y(e, "YYYYMMDD"), 10) - parseInt(y(t, "YYYYMMDD"), 10);
       return l > 0 ? 1 : l === 0 ? 0 : -1;
     }, re = (e, t) => {
@@ -607,22 +607,22 @@ const It = (a, r) => {
     }, Oe = (e) => Math.round(et(e) / 864e5), et = (e) => (typeof e == "object" && e.getTime && (e = e.getTime()), typeof e == "string" && !e.match(/\d{13}/) && (e = K(e).getTime()), e = parseInt(e, 10) - (/* @__PURE__ */ new Date()).getTimezoneOffset() * 60 * 1e3, e), tt = (e, t) => {
       const l = t === 1;
       let s = l ? M.value.month2 : M.value.month1;
-      return s = J(s), !he() && !l && re(s, M.value.month2) >= 0 || U(s) ? !1 : (n.moveBothMonths && l && W(M.value.month2, 1), W(s, t + 1), se(), j(), !0);
+      return s = J(s), !de() && !l && re(s, M.value.month2) >= 0 || U(s) ? !1 : (n.moveBothMonths && l && W(M.value.month2, 1), W(s, t + 1), se(), j(), !0);
     }, nt = (e, t) => {
       const l = t === 1;
       let s = l ? M.value.month2 : M.value.month1;
       return s = fe(s), l && re(s, M.value.month1) <= 0 || U(s) ? !1 : (n.moveBothMonths && !l && W(M.value.month1, 2), W(s, t + 1), se(), j(), !0);
-    }, ce = d([]), he = () => n.showSingleMonth || at(), at = () => typeof window > "u" ? !1 : n.singleMonthBreakpoint ? window.innerWidth < n.singleMonthBreakpoint : window.innerWidth < st(), st = () => ce.value[0] ? 2 * ce.value[0].offsetWidth + 50 : 0, U = (e) => {
+    }, ce = h([]), de = () => n.showSingleMonth || at(), at = () => typeof window > "u" ? !1 : n.singleMonthBreakpoint ? window.innerWidth < n.singleMonthBreakpoint : window.innerWidth < st(), st = () => ce.value[0] ? 2 * ce.value[0].offsetWidth + 50 : 0, U = (e) => {
       const t = new Date(e.valueOf());
       return n.minDate && new Date(t.getFullYear(), t.getMonth() + 1, 0, 23, 59, 59) < n.minDate || n.maxDate && new Date(t.getFullYear(), t.getMonth(), 1) > n.maxDate;
     }, j = () => {
-      if (he()) {
+      if (de()) {
         U(fe(M.value.month1)) ? i.value.months[0].prevBtn = !1 : i.value.months[0].prevBtn = !0, U(J(M.value.month1)) ? i.value.months[0].nextBtn = !1 : i.value.months[0].nextBtn = !0;
         return;
       }
       const e = parseInt(y(M.value.month1, "YYYYMM"), 10), t = parseInt(y(M.value.month2, "YYYYMM"), 10), l = Math.abs(e - t);
       l > 1 && l !== 89 ? (i.value.months[0].nextBtn = !0, i.value.months[1].prevBtn = !0) : (i.value.months[0].nextBtn = !1, i.value.months[1].prevBtn = !1), U(fe(M.value.month1)) ? i.value.months[0].prevBtn = !1 : i.value.months[0].prevBtn = !0, U(J(M.value.month2)) ? i.value.months[1].nextBtn = !1 : i.value.months[1].nextBtn = !0;
-    }, Ce = () => {
+    }, _e = () => {
       const e = f.value && !c.value;
       for (let t = 0; t < i.value.months.length; t++)
         for (let l = 0; l < i.value.months[t].days.length; l++) {
@@ -637,15 +637,15 @@ const It = (a, r) => {
           i.value.months[t].days.splice(l, 1, s);
         }
       return !0;
-    }, Ie = (e, t) => {
+    }, Ce = (e, t) => {
       const l = parseInt(e.time, 10);
-      if (e.isValid && xe(e)) {
+      if (e.isValid && Ne(e)) {
         for (let s = 0; s < i.value.months.length; s++)
           for (let o = 0; o < i.value.months[s].days.length; o++) {
             const D = parseInt(i.value.months[s].days[o].time, 10);
             D === l ? i.value.months[s].days[o].isHovering = !0 : i.value.months[s].days[o].isHovering = !1, f.value && !c.value && (f.value < D && l >= D || f.value > D && l <= D) ? i.value.months[s].days[o].isHovering = !0 : i.value.months[s].days[o].isHovering = !1;
           }
-        f.value && !c.value && (Y.count = x(l, f.value) - 1);
+        f.value && !c.value && (k.count = N(l, f.value) - 1);
       }
     }, lt = () => {
       for (let e = 0; e < i.value.months.length; e++)
@@ -654,9 +654,9 @@ const It = (a, r) => {
     }, rt = () => {
       const e = [];
       for (let t = 0; t < n.disabledDates.length; t++)
-        e[t] = C.parse(n.disabledDates[t], "YYYY-MM-DD");
+        e[t] = _.parse(n.disabledDates[t], "YYYY-MM-DD");
       e.sort((t, l) => t - l), m.value = e;
-    }, Te = (e) => {
+    }, Ie = (e) => {
       let t = [!1, !1];
       if (e < m.value[0])
         n.enableCheckout ? t = [!1, Q(m.value[0], 1)] : t = [!1, m.value[0]];
@@ -665,33 +665,33 @@ const It = (a, r) => {
       else {
         let l = m.value.length, s = m.value.length;
         const o = Math.abs(new Date(0, 0, 0).valueOf());
-        let D = o, p = -o, h = 0, S;
+        let D = o, p = -o, d = 0, S;
         for (S = 0; S < m.value.length; ++S)
-          h = e - m.value[S], h < 0 && h > p && (s = S, p = h), h > 0 && h < D && (l = S, D = h);
+          d = e - m.value[S], d < 0 && d > p && (s = S, p = d), d > 0 && d < D && (l = S, D = d);
         m.value[l] && (t[0] = m.value[l]), typeof m.value[l] > "u" ? t[1] = !1 : n.enableCheckout ? t[1] = Q(m.value[s], 1) : t[1] = m.value[s];
       }
       return t;
-    }, de = d([]), ot = () => {
+    }, he = h([]), ot = () => {
       const e = [], t = [], l = /* @__PURE__ */ new Date();
       for (let s = 0; s < 7; s++) {
         const o = Q(l, s);
-        e[C.format(o, "d")] = C.format(o, "dddd");
+        e[_.format(o, "d")] = _.format(o, "dddd");
       }
       for (let s = 0; s < n.disabledDaysOfWeek.length; s++)
         t.push(e.indexOf(n.disabledDaysOfWeek[s]));
-      t.sort(), de.value = t;
+      t.sort(), he.value = t;
     }, it = (e) => {
       const t = [!1, !1];
       for (let l = 0; l < 7; l++) {
         const s = Se(e, l);
-        if (de.value.indexOf(parseInt(C.format(s, "d"), 10)) > -1) {
+        if (he.value.indexOf(parseInt(_.format(s, "d"), 10)) > -1) {
           t[0] = s;
           break;
         }
       }
       for (let l = 0; l < 7; l++) {
         const s = Q(e, l);
-        if (de.value.indexOf(parseInt(C.format(s, "d"), 10)) > -1) {
+        if (he.value.indexOf(parseInt(_.format(s, "d"), 10)) > -1) {
           t[1] = s;
           break;
         }
@@ -699,7 +699,7 @@ const It = (a, r) => {
       return t;
     }, ut = (e, t) => {
       typeof e == "string" && typeof t == "string" ? (e = K(e), t = K(t)) : (e = new Date(e.getTime()), t = new Date(t.getTime())), Ke(e, t);
-    }, Y = dt(
+    }, k = ht(
       {
         show: !1,
         top: 0,
@@ -708,45 +708,45 @@ const It = (a, r) => {
         count: 0,
         error: !1
       }
-    ), Ne = () => Y.show = !1, xe = (e) => !(!e.isValid || !e.isCurrentMonth), ft = (e, t) => {
-      if (!v.value.start || v.value.start && v.value.end || !xe(t))
+    ), Te = () => k.show = !1, Ne = (e) => !(!e.isValid || !e.isCurrentMonth), ft = (e, t) => {
+      if (!v.value.start || v.value.start && v.value.end || !Ne(t))
         return !1;
-      Y.show = !0;
-      const l = Be.value.getBoundingClientRect(), s = e.target.getBoundingClientRect();
-      Y.top = s.top - l.top - 35, Y.left = s.left - l.left, Y.width = s.width;
-    }, Be = d(null), me = () => {
-      i.value.showSingleMonth = he();
+      k.show = !0;
+      const l = xe.value.getBoundingClientRect(), s = e.target.getBoundingClientRect();
+      k.top = s.top - l.top - 35, k.left = s.left - l.left, k.width = s.width;
+    }, xe = h(null), me = () => {
+      i.value.showSingleMonth = de();
     };
     mt(() => i.value.showSingleMonth, () => {
       j();
     });
-    const He = () => typeof client < "u";
+    const Be = () => typeof client < "u";
     vt(() => {
       window.removeEventListener("resize", () => me());
     });
-    const ve = d(!1);
+    const ve = h(!1);
     return Dt(() => {
       window.addEventListener("resize", () => me()), me(), j(), ve.value = !0;
-    }), je(), (e, t) => (H(), _("div", {
+    }), je(), (e, t) => (B(), H("div", {
       class: "h-datepicker",
       ref_key: "parent",
-      ref: Be
+      ref: xe
     }, [
       Z("div", {
-        class: X([{ "h-datepicker_invisible": !Y.show, visible: Y.show }, "h_datepicker_popup"]),
+        class: X([{ "h-datepicker_invisible": !k.show, visible: k.show }, "h_datepicker_popup"]),
         style: gt(
-          { top: Y.top + "px", left: Y.left + "px", width: Y.width + "px" }
+          { top: k.top + "px", left: k.left + "px", width: k.width + "px" }
         )
       }, [
-        Z("div", Tt, [
+        Z("div", It, [
           G(e.$slots, "popup", {
-            nights: Y.count
+            nights: k.count
           }, () => [
-            q(ee(Y.count ? Y.count + " " + (Y.count > 1 ? z("nights") : z("night")) : z("not selected")), 1)
+            q(ee(k.count ? k.count + " " + (k.count > 1 ? z("nights") : z("night")) : z("not selected")), 1)
           ], !0)
         ])
       ], 6),
-      (H(!0), _(pe, null, Me(i.value.months, (l, s) => (H(), _("div", {
+      (B(!0), H(pe, null, Me(i.value.months, (l, s) => (B(), H("div", {
         key: l.id,
         ref_for: !0,
         ref_key: "monthsDoms",
@@ -759,9 +759,9 @@ const It = (a, r) => {
           "h-datepicker_month-2": s === 1
         }])
       }, [
-        Z("div", Nt, [
-          Z("div", xt, [
-            ve.value || !He ? (H(), _("div", {
+        Z("div", Tt, [
+          Z("div", Nt, [
+            ve.value || !Be ? (B(), H("div", {
               key: 0,
               onClick: (o) => nt(l, s),
               class: X(["month_control_btn", { "h-datepicker_invisible": !l.prevBtn }])
@@ -769,15 +769,15 @@ const It = (a, r) => {
               G(e.$slots, "prev", {}, () => [
                 q(" <<")
               ], !0)
-            ], 10, Bt)) : _e("", !0)
+            ], 10, xt)) : He("", !0)
           ]),
-          Z("div", Ht, [
+          Z("div", Bt, [
             G(e.$slots, "month", { month: l }, () => [
               q(ee(l.name) + " " + ee(l.year), 1)
             ], !0)
           ]),
-          Z("div", _t, [
-            ve.value || !He ? (H(), _("div", {
+          Z("div", Ht, [
+            ve.value || !Be ? (B(), H("div", {
               key: 0,
               onClick: (o) => tt(l, s),
               class: X(["month_control_btn", { "h-datepicker_invisible": !l.nextBtn }])
@@ -785,33 +785,33 @@ const It = (a, r) => {
               G(e.$slots, "next", {}, () => [
                 q(" >> ")
               ], !0)
-            ], 10, Vt)) : _e("", !0)
+            ], 10, Vt)) : He("", !0)
           ])
         ]),
         Z("div", Ft, [
-          (H(!0), _(pe, null, Me(ue(), (o) => (H(), _("div", Wt, [
+          (B(!0), H(pe, null, Me(ue(), (o) => (B(), H("div", Wt, [
             G(e.$slots, "weekday", { weekday: o }, () => [
               q(ee(o), 1)
             ], !0)
           ]))), 256)),
-          (H(!0), _(pe, null, Me(l.days, (o) => (H(), _("div", {
+          (B(!0), H(pe, null, Me(l.days, (o) => (B(), H("div", {
             onClick: (D) => Qe(o),
-            onMouseout: t[0] || (t[0] = (D) => Ne()),
-            onMouseover: (D) => Ie(o) || ft(D, o),
+            onMouseout: t[0] || (t[0] = (D) => Te()),
+            onMouseover: (D) => Ce(o) || ft(D, o),
             class: X([{
               h_datepicker_notCurrentMonth: !o.isCurrentMonth,
-              valid: o.isValid,
-              invalid: !o.isValid,
-              tmpinvalid: !o.isTmpValid,
-              tmp: o.isTmpValid,
-              h_datepicker_valid: o.isDisabled,
-              "checkout-enabled": o.isCheckOutEnabled,
-              "checkout-disabled": !o.isCheckOutEnabled,
-              "before-disabled-date": o.isDayBeforeDisabledDate,
-              "first-day-selected": o.isFirstDaySelected,
-              "last-day-selected": o.isLastDaySelected,
-              selected: o.isSelected,
-              hovering: o.isHovering
+              h_datepicker_valid: o.isValid,
+              h_datepicker_invalid: !o.isValid,
+              h_datepicker_tmp_invalid: !o.isTmpValid,
+              h_datepicker_tmp_valid: o.isTmpValid,
+              h_datepicker_disabled: o.isDisabled,
+              h_datepicker_checkout_enabled: o.isCheckOutEnabled,
+              h_datepicker_checkout_disabled: !o.isCheckOutEnabled,
+              h_datepicker_before_disabled_date: o.isDayBeforeDisabledDate,
+              h_datepicker_first_day_selected: o.isFirstDaySelected,
+              h_datepicker_last_day_selected: o.isLastDaySelected,
+              h_datepicker_selected: o.isSelected,
+              h_datepicker_hovering: o.isHovering
             }, "h_datepicker_day"])
           }, [
             G(e.$slots, "day", { day: o }, () => [
@@ -822,7 +822,7 @@ const It = (a, r) => {
       ], 2))), 128))
     ], 512));
   }
-}, $t = /* @__PURE__ */ It(Et, [["__scopeId", "data-v-e9e2a6e8"]]);
+}, $t = /* @__PURE__ */ Ct(Et, [["__scopeId", "data-v-6ba9840c"]]);
 export {
   $t as default
 };

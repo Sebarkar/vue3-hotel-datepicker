@@ -62,11 +62,21 @@ const translation = {
 const prices = [
     ...Array.from({length: 70}, (_, i) => i + 1).map(i => (Math.floor(Math.random() * (100 - 80) + 80)))
 ]
+
+const start = ref('');
+const end = ref('');
 </script>
 
 <template>
   <div>
     <h1>Components</h1>
+      <div class="wrapper">
+          <h2 class="w-full">Empty</h2>
+          <Vue3HotelDatePicker
+              :start-date="start"
+              :end-date="end"
+          />
+      </div>
     <div class="wrapper">
       <h2 class="w-full">Selected Dates</h2>
       <Vue3HotelDatePicker

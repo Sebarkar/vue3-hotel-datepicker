@@ -1242,18 +1242,18 @@ init();
                     @mouseover="dayHovering(day, index + 1) || showPopover($event, day)"
                     :class="{
             'h_datepicker_notCurrentMonth': !day.isCurrentMonth,
-            'valid': day.isValid,
-            'invalid': !day.isValid,
-            'tmpinvalid': !day.isTmpValid,
-            'tmp': day.isTmpValid,
-            'h_datepicker_valid': day.isDisabled,
-            'checkout-enabled': day.isCheckOutEnabled,
-            'checkout-disabled': !day.isCheckOutEnabled,
-            'before-disabled-date': day.isDayBeforeDisabledDate,
-            'first-day-selected': day.isFirstDaySelected,
-            'last-day-selected': day.isLastDaySelected,
-            'selected': day.isSelected,
-            'hovering': day.isHovering,
+            'h_datepicker_valid': day.isValid,
+            'h_datepicker_invalid': !day.isValid,
+            'h_datepicker_tmp_invalid': !day.isTmpValid,
+            'h_datepicker_tmp_valid': day.isTmpValid,
+            'h_datepicker_disabled': day.isDisabled,
+            'h_datepicker_checkout_enabled': day.isCheckOutEnabled,
+            'h_datepicker_checkout_disabled': !day.isCheckOutEnabled,
+            'h_datepicker_before_disabled_date': day.isDayBeforeDisabledDate,
+            'h_datepicker_first_day_selected': day.isFirstDaySelected,
+            'h_datepicker_last_day_selected': day.isLastDaySelected,
+            'h_datepicker_selected': day.isSelected,
+            'h_datepicker_hovering': day.isHovering,
           }"
                     class="h_datepicker_day"
                 >
@@ -1376,28 +1376,28 @@ init();
     cursor: default !important;
 }
 
-.h-datepicker * .valid {
+.h_datepicker_valid {
     cursor: pointer;
     -webkit-user-select: none;
     -moz-user-select: none;
     user-select: none;
 }
 
-.h-datepicker * .invalid {
+.h_datepicker_invalid {
     color: #e8ebf4;
 }
 
-.h-datepicker * .first-day-selected, .h-datepicker * .last-day-selected {
+.h_datepicker_last_day_selected, .h_datepicker_first_day_selected {
     color: #fff;
     background-color: #005172 !important;
 }
 
-.h-datepicker * .hovering {
+.h_datepicker_hovering {
     color: #fff;
     background-color: #008ebd;
 }
 
-.h-datepicker * .selected {
+.h_datepicker_selected {
     color: #fff;
     background-color: rgb(31, 197, 255);
 }
