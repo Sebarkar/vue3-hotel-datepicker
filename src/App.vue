@@ -62,47 +62,6 @@ const translation = {
 const prices = [
     ...Array.from({length: 70}, (_, i) => i + 1).map(i => (Math.floor(Math.random() * (100 - 80) + 80)))
 ]
-
-const lang = ref( 'en')
-
-const script1 = '';
-
-const code1 = '<template>\n' +
-    '      <Vue3HotelDatePicker\n' +
-    '          :start-date="selectedDates[0]"\n' +
-    '          :end-date="selectedDates[1]"\n' +
-    '          :single-month-breakpoint="768"\n' +
-    '          enable-checkout\n' +
-    '      >\n' +
-    '        <template v-slot:day="{ day }">\n' +
-    '          <div class="calendar_day">\n' +
-    '            {{day.day}}\n' +
-    '            <span\n' +
-    '                v-if="day.isValid && !day.disabled"\n' +
-    '                :class="prices[day.day] < 85 ? \'text-green\' : \'text-red\'"\n' +
-    '                class="text-small"\n' +
-    '            >{{ prices[day.day] }}$</span>\n' +
-    '          </div>\n' +
-    '        </template>\n' +
-    '        <template #next>\n' +
-    '          <div class="control_btn">\n' +
-    '            <Icon icon="octicon:arrow-right-16"/>\n' +
-    '          </div>\n' +
-    '        </template>\n' +
-    '        <template #prev>\n' +
-    '          <div class="control_btn">\n' +
-    '            <Icon icon="octicon:arrow-left-16"/>\n' +
-    '          </div>\n' +
-    '        </template>\n' +
-    '        <template v-slot:popup="{ nights }">\n' +
-    '          <div class="popup_container">\n' +
-    '            <Icon icon="material-symbols:mode-night-outline"/>\n' +
-    '            {{nights}}\n' +
-    '          </div>\n' +
-    '        </template>\n' +
-    '      </Vue3HotelDatePicker>\n' +
-    '</template>'
-
 </script>
 
 <template>
@@ -193,16 +152,6 @@ const code1 = '<template>\n' +
           </div>
         </template>
       </Vue3HotelDatePicker>
-      <highlightjs
-          class="code_block"
-          language="js"
-          :code="script1"
-      />
-      <highlightjs
-          class="code_block"
-          language="js"
-          :code="code1"
-      />
     </div>
   </div>
 </template>

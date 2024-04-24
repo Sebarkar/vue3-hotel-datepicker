@@ -4,12 +4,12 @@ import {defineConfig} from "vite";
 import dts from "vite-plugin-dts";
 
 export default defineConfig({
-    plugins: [vue(), dts()],
+    plugins: [vue()],
     build: {
         lib: {
             entry: path.resolve(__dirname, "src/index.js"),
             name: "Vue3HotelDatePicker",
-            fileName: 'main'
+            fileName: (format) => `index.${format}.js`,
         },
         rollupOptions: {
             external: ["vue"],
