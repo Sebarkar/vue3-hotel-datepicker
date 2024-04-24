@@ -65,6 +65,10 @@ const prices = [
 
 const start = ref('');
 const end = ref('');
+
+const select = (values) => {
+  console.log(values)
+}
 </script>
 
 <template>
@@ -75,6 +79,7 @@ const end = ref('');
           <Vue3HotelDatePicker
               :start-date="start"
               :end-date="end"
+              @selected="select"
           />
       </div>
     <div class="wrapper">

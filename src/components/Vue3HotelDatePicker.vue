@@ -1403,7 +1403,7 @@ init();
 }
 
 .h_datepicker_disabled {
-    background-color: #fcb2be !important;
+    background-color: #fcb2be;
 }
 
 @media (max-width: 768px) {
