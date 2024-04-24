@@ -84,7 +84,9 @@ The end view date. All the dates after this date will be disabled.
 - Default: `0`
 
 Disabled check in days of the week. Possible values: 
-['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'].
+```javascript
+['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+```
 
 ### moveBothMonths
 **Not implemented yet**
@@ -116,7 +118,7 @@ Disabled check out dates. All the dates passed to the list can not be selected a
   Disabled check in weekdays. All the dates passed to the list can not be selected as a start range.
   Example []
 ```javascript
-['mon', 'thu']
+['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 ```
 
 ### noCheckOutDaysOfWeek
@@ -126,7 +128,7 @@ Disabled check out dates. All the dates passed to the list can not be selected a
   Disabled check in weekdays. All the weekdays passed to the list can not be selected as a end range.
   Example []
 ```javascript
-['mon', 'thu']
+['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 ```
 
 ### disabledDates
@@ -152,15 +154,14 @@ Example []
 
 ### singleMonthBreakpoint
 // Works for detect button next and prev display and display months (for ssr needs additional css settings)
-- Type: `Number` or `Boolean`
-- Default: `false`
+- Type: `Number` or `String`
+- Default: `768`
 - Example 768 - after 768px width of window, the date picker will show 2 months.
 - Available only in browser.
 - For SSR prevent Node mismatch buttons and months display will load only in onMounted hook. 
 - Component use css properties set 768 and less hide second month to prevent jumping content.
 
 ### selectForward 
-**Not implemented yet**
 - Type: `Boolean`
 - Default: `false`
 - Available selection forward only.

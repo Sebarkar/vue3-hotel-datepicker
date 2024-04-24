@@ -56,8 +56,8 @@ const props = defineProps({
     maxNights: 0,
     minNights: 1,
     singleMonthBreakpoint: {
-        default: false,
-        type: [Number, Boolean],
+        default: 768,
+        type: [Number, String],
     },
     selectForward: Boolean,
     showSingleMonth: Boolean,
@@ -425,7 +425,7 @@ const fillDayState = (_day) => {
             }
         }
         if (props.disabledDaysOfWeek.length > 0) {
-            if (props.disabledDaysOfWeek.indexOf(fecha.format(_day.time, "dddd")) > -1) {
+            if (props.disabledDaysOfWeek.indexOf(fecha.format(_day.time, "ddd")) > -1) {
                 _day.isValid = false;
                 isDayOfWeekDisabled = true;
             }
@@ -442,13 +442,13 @@ const fillDayState = (_day) => {
             }
         }
         if (props.noCheckInDaysOfWeek.length > 0) {
-            if (props.noCheckInDaysOfWeek.indexOf(fecha.format(_day.time, "dddd")) > -1) {
+            if (props.noCheckInDaysOfWeek.indexOf(fecha.format(_day.time, "ddd")) > -1) {
                 isNoCheckIn = true;
                 isFirstEnabledDate = false;
             }
         }
         if (props.noCheckOutDaysOfWeek.length > 0) {
-            if (props.noCheckOutDaysOfWeek.indexOf(fecha.format(_day.time, "dddd")) > -1) {
+            if (props.noCheckOutDaysOfWeek.indexOf(fecha.format(_day.time, "ddd")) > -1) {
                 isNoCheckOut = true;
             }
         }
@@ -456,7 +456,7 @@ const fillDayState = (_day) => {
 
     _day.isToday = isToday
     _day.isDisabled = isDisabled
-    _day.isCheckOutEnabled = isDisabled && props.enableCheckout && isFirstDisabledDate.value === 1
+    _day.isCheckOutEnabled = !(isDisabled && props.enableCheckout && isFirstDisabledDate.value === 1)
     _day.isDayBeforeDisabledDate = isDayBeforeDisabledDate
     _day.isCheckInOnly = isStartDate || isFirstEnabledDate
     _day.isNoCheckIn = isNoCheckIn
@@ -836,24 +836,12 @@ const goToPreviousMonth = (month, index) => {
     disableNextPrevButtons();
     return true;
 }
-
-const monthsDoms = ref([]);
 const isSingleMonth = () => props.showSingleMonth || showSingleMonthBasedOnWindow();
 const showSingleMonthBasedOnWindow = () => {
     if (typeof window === 'undefined') {
         return false;
     }
-    if (props.singleMonthBreakpoint) {
-        return window.innerWidth < props.singleMonthBreakpoint;
-    }
-    // Only if months are rendered and has fixed width (width: x% will be always less than window width)
-    return window.innerWidth < getWidthOfMonth();
-}
-const getWidthOfMonth = () => {
-    if (monthsDoms.value[0]) {
-        return 2 * monthsDoms.value[0].offsetWidth + 50;
-    }
-    return 0;
+    return window.innerWidth < +props.singleMonthBreakpoint;
 }
 const isMonthOutOfRange = (month) => {
     const _m = new Date(month.valueOf());
@@ -948,9 +936,7 @@ const updateSelectableRange = () => {
 const dayHovering = (day, monthIndex) => {
     const hoverTime = parseInt(day.time, 10);
     if (day.isValid && selectionAllowed(day)) {
-        // Get every td in the months table: our days
-
-        // Iterate each day and add the hovering class
+        // Iterate each day and add the hovering props
         for (let x = 0; x < datePickerObject.value.months.length; x++) {
             for (let i = 0; i < datePickerObject.value.months[x].days.length; i++) {
                 const time = parseInt(datePickerObject.value.months[x].days[i].time, 10);
@@ -966,7 +952,7 @@ const dayHovering = (day, monthIndex) => {
                 }
             }
         }
-        // Generate date range tooltip
+        // Generate date range popup
         if (start.value && !end.value) {
             popup.count = countDays(hoverTime, start.value) - 1;
         }
@@ -1058,8 +1044,9 @@ const getDisabledDays = () => {
     const day = new Date();
     for (let i = 0; i < 7; i++) {
         const _date = addDays(day, i);
-        allDays[fecha.format(_date, "d")] = fecha.format(_date, "dddd");
+        allDays[fecha.format(_date, "d")] = fecha.format(_date, "ddd");
     }
+
     for (let i = 0; i < props.disabledDaysOfWeek.length; i++) {
         disabledDays.push(allDays.indexOf(props.disabledDaysOfWeek[i]));
     }
@@ -1166,9 +1153,9 @@ init();
 </script>
 
 <template>
-    <div class="h-datepicker" ref="parent">
+    <div class="h_datepicker" ref="parent">
         <div
-            :class="{'h-datepicker_invisible': !popup.show, 'visible': popup.show}"
+            :class="{'h_datepicker_invisible': !popup.show, 'visible': popup.show}"
             class="h_datepicker_popup"
             :style="{ top: popup.top + 'px', left: popup.left + 'px', width: popup.width  + 'px' }
 ">
@@ -1183,64 +1170,66 @@ init();
         <div
             v-for="(month, index) in datePickerObject.months"
             :key="month.id"
-            ref="monthsDoms"
-            class="h-datepicker_month"
+            class="h_datepicker_month"
             :class="{
-          'h-datepicker_hidden': index === 1 && datePickerObject.showSingleMonth,
-          'h-datepicker_two_month_display': !datePickerObject.showSingleMonth,
-          'h-datepicker_one_month_display': datePickerObject.showSingleMonth,
-          'h-datepicker_month-1': index === 0,
-          'h-datepicker_month-2': index === 1,
+          'h_datepicker_hidden': index === 1 && datePickerObject.showSingleMonth,
+          'h_datepicker_two_month_display': !datePickerObject.showSingleMonth,
+          'h_datepicker_one_month_display': datePickerObject.showSingleMonth,
+          'h_datepicker_month-1': index === 0,
+          'h_datepicker_month-2': index === 1,
         }"
         >
-            <div class="month_control_panel">
+            <div class="h_datepicker_month_control_panel">
                 <div
-                    class="month_control_item"
+                    class="h_datepicker_month_control_item"
                 >
                     <div @click="goToPreviousMonth(month, index)"
-                         class="month_control_btn"
+                         class="h_datepicker_month_control_btn"
                          v-if="loaded || !isSSR"
-                         :class="{ 'h-datepicker_invisible': !month.prevBtn }"
+                         :class="{ 'h_datepicker_invisible': !month.prevBtn }"
                     >
                         <slot name="prev"> <<</slot>
                     </div>
                 </div>
-                <div class="month_control_item">
+                <div class="h_datepicker_month_control_item">
                     <slot name="month" :month="month">
                         {{ month.name }} {{ month.year }}
                     </slot>
                 </div>
                 <div
-                    class="month_control_item"
+                    class="h_datepicker_month_control_item"
                 >
                     <div
                         @click="goToNextMonth(month, index)"
-                        class="month_control_btn"
+                        class="h_datepicker_month_control_btn"
                         v-if="loaded || !isSSR"
-                        :class="{ 'h-datepicker_invisible': !month.nextBtn }"
+                        :class="{ 'h_datepicker_invisible': !month.nextBtn }"
                     >
-                        <slot name="next"> >> </slot>
+                        <slot name="next"> >></slot>
                     </div>
                 </div>
             </div>
-            <div class="month_box">
-                <div
-                    class="week_name"
-                    v-for="weekName in getWeekDayNames()"
-                >
-                    <slot
-                        name="weekday"
-                        :weekday="weekName"
+            <div class="h_datepicker_month_box">
+                <div class="h_datepicker_weeks_container">
+                    <div
+                        class="h_datepicker_week_name"
+                        v-for="weekName in getWeekDayNames()"
                     >
-                        {{ weekName }}
-                    </slot>
+                        <slot
+                            name="weekday"
+                            :weekday="weekName"
+                        >
+                            {{ weekName }}
+                        </slot>
+                    </div>
                 </div>
-                <div
-                    v-for="day in month.days"
-                    @click="dayClicked(day, index + 1)"
-                    @mouseout="hidePopover()"
-                    @mouseover="dayHovering(day, index + 1) || showPopover($event, day)"
-                    :class="{
+                <div class="h_datepicker_dates_container">
+                    <div
+                        v-for="day in month.days"
+                        @click="dayClicked(day, index + 1)"
+                        @mouseout="hidePopover()"
+                        @mouseover="dayHovering(day, index + 1) || showPopover($event, day)"
+                        :class="{
             'h_datepicker_notCurrentMonth': !day.isCurrentMonth,
             'h_datepicker_valid': day.isValid,
             'h_datepicker_invalid': !day.isValid,
@@ -1249,20 +1238,23 @@ init();
             'h_datepicker_disabled': day.isDisabled,
             'h_datepicker_checkout_enabled': day.isCheckOutEnabled,
             'h_datepicker_checkout_disabled': !day.isCheckOutEnabled,
+            'h_datepicker_checkin_enabled': !day.isNoCheckIn,
+            'h_datepicker_checkin_disabled': day.isNoCheckIn,
             'h_datepicker_before_disabled_date': day.isDayBeforeDisabledDate,
             'h_datepicker_first_day_selected': day.isFirstDaySelected,
             'h_datepicker_last_day_selected': day.isLastDaySelected,
             'h_datepicker_selected': day.isSelected,
             'h_datepicker_hovering': day.isHovering,
           }"
-                    class="h_datepicker_day"
-                >
-                    <slot
-                        name="day"
-                        :day="day"
+                        class="h_datepicker_day"
                     >
-                        {{ day.day }}
-                    </slot>
+                        <slot
+                            name="day"
+                            :day="day"
+                        >
+                            {{ day.day }}
+                        </slot>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1270,17 +1262,18 @@ init();
 </template>
 
 <style scoped>
-.h-datepicker {
+.h_datepicker {
     user-select: none;
     display: flex;
     justify-content: space-between;
     max-width: 1000px;
-    min-height: 600px;
+    max-height: 600px;
+    height: 500px;
     position: relative;
     overflow: hidden;
 }
 
-.h-datepicker_invisible {
+.h_datepicker_invisible {
     visibility: hidden;
 }
 
@@ -1297,32 +1290,48 @@ init();
     z-index: 100;
 }
 
-.h-datepicker_month {
+.h_datepicker_dates_container, .h_datepicker_weeks_container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-content: flex-start;
+    width: 100%;
+}
+
+.h_datepicker_weeks_container {
+    height: 15%;
+}
+
+.h_datepicker_dates_container {
+    height: 85%;
+}
+
+.h_datepicker_month {
     min-width: 320px;
 }
 
-.h-datepicker_one_month_display {
+.h_datepicker_one_month_display {
     width: 100%;
-    padding: 0 5%
 }
 
-.h-datepicker_two_month_display {
+.h_datepicker_two_month_display {
     width: 45%;
 }
 
-.h-datepicker * .month_control_panel {
+.h_datepicker_month_control_panel {
     display: flex;
     width: 100%;
+    height: 14%;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1%;
 }
 
-.h-datepicker_hidden {
+.h_datepicker_hidden {
     display: none;
 }
 
-.h-datepicker * .month_control_item {
+.h_datepicker_month_control_item {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1333,14 +1342,14 @@ init();
     text-align: center;
 }
 
-.h-datepicker * .month_control_btn {
+.h_datepicker_month_control_btn {
     cursor: pointer;
 }
 
-.h-datepicker * .week_name {
+.h_datepicker_week_name {
     width: 13%;
     border-radius: 20px;
-    height: 65px;
+    height: 100%;
     margin-bottom: 5px;
     display: flex;
     justify-content: center;
@@ -1348,11 +1357,12 @@ init();
     box-sizing: border-box;
 }
 
-.h-datepicker * .month_box {
+.h_datepicker_month_box {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     width: 100%;
+    height: 85%;
     text-transform: uppercase;
     font-weight: 400;
 }
@@ -1362,8 +1372,8 @@ init();
     text-align: center;
     width: 13%;
     border-radius: 20px;
-    height: 65px;
-    margin-bottom: 5px;
+    height: 15%;
+    margin-bottom: 1%;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -1406,12 +1416,16 @@ init();
 }
 
 @media (max-width: 768px) {
-    .h-datepicker_month-2 {
-        display: none!important;
+    .h_datepicker_month-2 {
+        display: none !important;
     }
 
-    .h-datepicker_month {
+    .h_datepicker_month {
         width: 100%;
+    }
+
+    .h_datepicker_day {
+        height: 65px;
     }
 }
 </style>

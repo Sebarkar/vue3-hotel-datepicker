@@ -77,14 +77,35 @@ const select = (values) => {
       <div class="wrapper">
           <h2 class="w-full">Empty</h2>
           <Vue3HotelDatePicker
-              :start-date="start"
-              :end-date="end"
+              class="date_picker_container"
               @selected="select"
+          />
+      </div>
+      <div class="wrapper">
+          <h2 class="w-full">No Checkin days of Week</h2>
+          <Vue3HotelDatePicker
+              class="date_picker_container"
+              :no-check-in-days-of-week="['Sun', 'Sat']"
+          />
+      </div>
+        <div class="wrapper">
+            <h2 class="w-full">Disable Weekdays</h2>
+            <Vue3HotelDatePicker
+                class="date_picker_container"
+                :disabledDaysOfWeek="['Sun', 'Sat']"
+            />
+        </div>
+      <div class="wrapper">
+          <h2 class="w-full">Select Forward</h2>
+          <Vue3HotelDatePicker
+              class="date_picker_container"
+              select-forward
           />
       </div>
     <div class="wrapper">
       <h2 class="w-full">Selected Dates</h2>
       <Vue3HotelDatePicker
+          class="date_picker_container"
           :start-date="selectedDates[0]"
           :end-date="selectedDates[1]"
           :single-month-breakpoint="768"
@@ -94,6 +115,7 @@ const select = (values) => {
     <div class="wrapper">
       <h2 class="w-full">Translation with slots</h2>
       <Vue3HotelDatePicker
+          class="date_picker_container"
           :start-date="selectedDates[0]"
           :end-date="selectedDates[1]"
           :single-month-breakpoint="768"
@@ -113,6 +135,7 @@ const select = (values) => {
     <div class="wrapper">
       <h2 class="w-full">Busy Dates (check out first disabled date = ALLOWED)</h2>
       <Vue3HotelDatePicker
+          class="date_picker_container"
           :single-month-breakpoint="768"
           :disabled-dates="busyDates()"
           enable-checkout
@@ -121,6 +144,7 @@ const select = (values) => {
     <div class="wrapper">
       <h2 class="w-full">Busy Dates (check out first disabled date = FORBIDDEN)</h2>
       <Vue3HotelDatePicker
+          class="date_picker_container"
           :single-month-breakpoint="768"
           :disabled-dates="busyDates()"
       />
@@ -128,6 +152,7 @@ const select = (values) => {
     <div class="wrapper">
       <h2 class="w-full">Single month breakpoint</h2>
       <Vue3HotelDatePicker
+          class="date_picker_container"
           :single-month-breakpoint="768"
       />
     </div>
@@ -135,6 +160,7 @@ const select = (values) => {
     <div class="wrapper">
       <h2 class="w-full">Next/prev/day/popup slots</h2>
       <Vue3HotelDatePicker
+          class="date_picker_container"
           :start-date="selectedDates[0]"
           :end-date="selectedDates[1]"
           :single-month-breakpoint="768"
@@ -181,6 +207,10 @@ const select = (values) => {
   max-width: 1200px;
   padding: 0 10px;
   background-color: beige;
+}
+
+.date_picker_container {
+    height: 500px;
 }
 
 .code_block {
