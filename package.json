@@ -2,7 +2,7 @@
   "name": "@sebarkar/vue3-hotel-datepicker",
   "homepage": "https://vue3-hotel-datepicker.sebarkar.tech",
   "private": false,
-  "version": "0.0.15",
+  "version": "0.0.16",
   "type": "module",
   "scripts": {
     "dev": "vite",
