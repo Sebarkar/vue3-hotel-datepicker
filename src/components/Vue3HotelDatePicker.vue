@@ -1275,7 +1275,6 @@ init();
     display: flex;
     justify-content: space-between;
     max-width: 1000px;
-    padding: 25px;
     min-height: 600px;
     position: relative;
     overflow: hidden;
