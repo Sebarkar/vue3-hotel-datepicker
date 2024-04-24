@@ -1,6 +1,6 @@
 <script setup>
-import * as fecha from "fecha";
-import {onMounted, onUnmounted, reactive, ref, watch, computed, onServerPrefetch} from "vue";
+import {onMounted, onUnmounted, reactive, ref, watch, computed} from "vue";
+import fecha from "fecha";
 
 const props = defineProps({
     format: {
@@ -30,7 +30,10 @@ const props = defineProps({
     minDate: {
         default: () => new Date(),
     }, // The start view date. All the dates before this date will be disabled.
-    maxDate: false, // The end view date. All the dates after this date will be disabled.
+    maxDate: {
+        default: () => false,
+        type: Boolean
+    }, // The end view date. All the dates after this date will be disabled.
     disabledDaysOfWeek: {
         default: () => []
     },
@@ -73,7 +76,7 @@ const props = defineProps({
     },
     i18n: {
         default: () => ({
-            'not selected' : 'Not selected',
+            'not selected': 'Not selected',
             'night': 'Night',
             'nights': 'Nights',
         }),
@@ -258,6 +261,25 @@ const addMonth = (date, month) => {
     // Store current month dates
     months.value["month" + month] = date;
 }
+
+const defaultDay = {
+    date: {},
+    type: '',
+    day: '',
+    time: '',
+    isValid: false,
+    isTmp: false,
+    isCurrentMonth: false,
+    isToday: false,
+    isNoCheckIn: false,
+    isNoCheckOut: false,
+    isDisabled: false,
+    isDayOfWeekDisabled: false,
+    isFirstEnabledDate: false,
+    isCheckInOnly: false,
+    isDayBeforeDisabledDate: false,
+}
+
 const createMonthObject = (_date) => {
     const days = [];
     const result = [];
@@ -286,18 +308,15 @@ const createMonthObject = (_date) => {
 
             // We pass the type property to know if the day is part of the
             // previous month. We already know that it is true.
-            days.push({
-                date: _day,
-                type: "lastMonth",
-                day: _day.getDate(),
-                time: _day.getTime(),
-                tabindex: 0,
-                attributes: [],
-                isNoCheckOut: false,
-                isValid: valid,
-                isNoCheckIn: false,
-                isCurrentMonth: false,
-            });
+            days.push(
+                Object.assign({}, defaultDay, {
+                    date: _day,
+                    type: "lastMonth",
+                    day: _day.getDate(),
+                    time: _day.getTime(),
+                    isValid: valid,
+                })
+            );
         }
     }
 
@@ -316,18 +335,14 @@ const createMonthObject = (_date) => {
 
         // We pass the type property to know if the day is part of the
         // current month or part of the next month
-        days.push({
+        days.push(Object.assign({}, defaultDay, {
             date: _day,
             type: _day.getMonth() === currentMonth ? "visibleMonth" : "nextMonth",
             day: _day.getDate(),
             time: _day.getTime(),
-            tabindex: 0,
-            attributes: [],
             isCurrentMonth: _day.getMonth() === currentMonth,
             isValid: valid,
-            isNoCheckIn: false,
-            isNoCheckOut: false,
-        });
+        }));
     }
 
     // Create the week rows.
@@ -1129,19 +1144,21 @@ watch(() => datePickerObject.value.showSingleMonth, () => {
     disableNextPrevButtons();
 })
 
+const isSSR = () => {
+    return typeof client !== 'undefined';
+}
+
 onUnmounted(() => {
     window.removeEventListener('resize', () => windowWidthChanged());
 })
 
+const loaded = ref(false);
+
 onMounted(() => {
-    if (typeof process === 'undefined') {
-        window.addEventListener('resize', () => windowWidthChanged());
-    } else {
-        if (process.client) {
-            window.addEventListener('resize', () => windowWidthChanged());
-            datePickerObject.value.showSingleMonth = isSingleMonth();
-        }
-    }
+    window.addEventListener('resize', () => windowWidthChanged());
+    windowWidthChanged()
+    disableNextPrevButtons();
+    loaded.value = true;
 })
 
 init();
@@ -1151,13 +1168,15 @@ init();
 <template>
     <div class="h-datepicker" ref="parent">
         <div
-            :class="{'h-datepicker_invisible': !popup.show}"
+            :class="{'h-datepicker_invisible': !popup.show, 'visible': popup.show}"
             class="h_datepicker_popup"
             :style="{ top: popup.top + 'px', left: popup.left + 'px', width: popup.width  + 'px' }
 ">
             <div style="pointer-events: none;">
                 <slot name="popup" :nights="popup.count">
-                    {{ popup.count ? popup.count + ' ' +(popup.count > 1 ? lang('nights') : lang('night')) : lang('not selected') }}
+                    {{
+                        popup.count ? popup.count + ' ' + (popup.count > 1 ? lang('nights') : lang('night')) : lang('not selected')
+                    }}
                 </slot>
             </div>
         </div>
@@ -1170,6 +1189,8 @@ init();
           'h-datepicker_hidden': index === 1 && datePickerObject.showSingleMonth,
           'h-datepicker_two_month_display': !datePickerObject.showSingleMonth,
           'h-datepicker_one_month_display': datePickerObject.showSingleMonth,
+          'h-datepicker_month-1': index === 0,
+          'h-datepicker_month-2': index === 1,
         }"
         >
             <div class="month_control_panel">
@@ -1178,9 +1199,8 @@ init();
                 >
                     <div @click="goToPreviousMonth(month, index)"
                          class="month_control_btn"
-                         :class="{
-                'h-datepicker_invisible': !month.prevBtn,
-                }"
+                         v-if="loaded || !isSSR"
+                         :class="{ 'h-datepicker_invisible': !month.prevBtn }"
                     >
                         <slot name="prev"> <<</slot>
                     </div>
@@ -1193,13 +1213,13 @@ init();
                 <div
                     class="month_control_item"
                 >
-                    <div @click="goToNextMonth(month, index)"
-                         class="month_control_btn"
-                         :class="{
-                'h-datepicker_invisible': !month.nextBtn,
-                }"
+                    <div
+                        @click="goToNextMonth(month, index)"
+                        class="month_control_btn"
+                        v-if="loaded || !isSSR"
+                        :class="{ 'h-datepicker_invisible': !month.nextBtn }"
                     >
-                        <slot name="next"> >></slot>
+                        <slot name="next"> >> </slot>
                     </div>
                 </div>
             </div>
@@ -1226,7 +1246,7 @@ init();
             'invalid': !day.isValid,
             'tmpinvalid': !day.isTmpValid,
             'tmp': day.isTmpValid,
-            'h_datepicker_disabled': day.isDisabled,
+            'h_datepicker_valid': day.isDisabled,
             'checkout-enabled': day.isCheckOutEnabled,
             'checkout-disabled': !day.isCheckOutEnabled,
             'before-disabled-date': day.isDayBeforeDisabledDate,
@@ -1386,4 +1406,13 @@ init();
     background-color: #fcb2be !important;
 }
 
+@media (max-width: 768px) {
+    .h-datepicker_month-2 {
+        display: none!important;
+    }
+
+    .h-datepicker_month {
+        width: 100%;
+    }
+}
 </style>

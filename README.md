@@ -1,6 +1,8 @@
 # vue3-hotel-datepicker
 
-A [Vue.js](https://vuejs.org/) date range picker oriented on hotel, apartment and other accommodations. Vue hotel datepicker provide date range selecting, minimum and maximum night limitation, custom methods for date restriction, and disabled dates. Ssr supported nuxt3 friendly.
+A [Vue.js](https://vuejs.org/) date range picker oriented on hotel, apartment and other accommodations. 
+Its just picker and not include modals or other implementations to prevent size overload, in most cases you already have modals implementation and can easy use it with this picker.
+Vue hotel datepicker provide date range selecting, minimum and maximum night limitation, custom methods for date restriction, and disabled dates. Ssr supported nuxt3 friendly.
 
 ## Demo
 
@@ -149,10 +151,13 @@ Example []
 - Minimum nights that can be selected.
 
 ### singleMonthBreakpoint
+// Works for detect button next and prev display and display months (for ssr needs additional css settings)
 - Type: `Number` or `Boolean`
 - Default: `false`
 - Example 768 - after 768px width of window, the date picker will show 2 months.
-- Available only in browser. Will load in onMounted hook or when SSR client mode
+- Available only in browser.
+- For SSR prevent Node mismatch buttons and months display will load only in onMounted hook. 
+- Component use css properties set 768 and less hide second month to prevent jumping content.
 
 ### selectForward 
 **Not implemented yet**
