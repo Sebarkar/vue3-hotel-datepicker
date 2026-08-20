@@ -1005,9 +1005,14 @@ defineExpose({
 .h-datepicker--mobile .h-datepicker__month-header {
   background: #fff;
   background: color-mix(in srgb, Canvas 94%, transparent);
+  grid-template-columns: minmax(0, 1fr);
   position: sticky;
   top: 0;
   z-index: 2;
+}
+
+.h-datepicker--mobile .h-datepicker__month-control {
+  display: none;
 }
 
 .h-datepicker--mobile .h-datepicker__day,

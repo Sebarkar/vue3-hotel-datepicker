@@ -1044,6 +1044,6 @@ var de = ["aria-label"], fe = ["aria-label"], pe = ["aria-label"], me = ["aria-l
 			}, [h(t.$slots, "day", { day: e }, () => [i("span", null, g(e.day), 1), e.isDayWithExtraText && o.extraDayText ? (f(), r("small", Se, g(o.extraDayText(e)), 1)) : n("", !0)], !0)], 42, xe)) : (f(), r("span", Ce))], 8, be))), 128))], 8, ye)], 10, me))), 128))], 8, pe)
 		], 10, de));
 	}
-}), [["__scopeId", "data-v-2dce60a3"]]);
+}), [["__scopeId", "data-v-6d098a24"]]);
 //#endregion
 export { we as default };
