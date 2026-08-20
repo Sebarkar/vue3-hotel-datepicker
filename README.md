@@ -4,6 +4,14 @@ A [Vue.js](https://vuejs.org/) date range picker oriented on hotel, apartment an
 Its just picker and not include modals or other implementations to prevent size overload, in most cases you already have modals implementation and can easy use it with this picker.
 Vue hotel datepicker provide date range selecting, minimum and maximum night limitation, custom methods for date restriction, and disabled dates. Ssr supported nuxt3 friendly.
 
+## What's new in 1.1.0
+
+- Mobile layouts render a configurable sequence of months in one native, smooth vertical scroller.
+- Calendar navigation and day selection are keyboard accessible and expose grid/button ARIA semantics.
+- Date comparisons are stable across daylight-saving time changes.
+- `maxDate` now accepts `Date`, formatted `String`, timestamp, or `false` as documented.
+- Existing 1.0.1 props, `selected` event, slots, and `h_datepicker*` CSS hooks remain supported.
+
 ## Demo
 
 ### Live demo
@@ -153,13 +161,16 @@ Example []
 - Minimum nights that can be selected.
 
 ### singleMonthBreakpoint
-// Works for detect button next and prev display and display months (for ssr needs additional css settings)
-- Type: `Number` or `String`
+
+- Type: `Number`, `String`, or `Boolean`
 - Default: `768`
-- Example 768 - after 768px width of window, the date picker will show 2 months.
-- Available only in browser.
-- For SSR prevent Node mismatch buttons and months display will load only in onMounted hook. 
-- Component use css properties set 768 and less hide second month to prevent jumping content.
+- Below this width the picker switches to the mobile vertical scroller. The component observes both the viewport and its own rendered width.
+
+### mobileMonths
+
+- Type: `Number`
+- Default: `12`
+- Number of consecutive months rendered in the mobile scroller. Values are clamped from 2 to 24. A finite `maxDate` can reduce the rendered count.
 
 ### selectForward 
 - Type: `Boolean`
@@ -201,17 +212,19 @@ Show only one month mode
 ## Events
 
 ### selected
-When a new date is selected, ```Vue3HotelDatepicker``` will emit an event ```update```, passing the Timestamp range array of strings to parent component.
+When a complete range is selected, `Vue3HotelDatePicker` emits `selected` with millisecond timestamps. The `select` alias emits the same payload. The `change` event is also emitted after either date changes and contains values formatted with the `format` prop.
 
 Date range Object example:
-Timestamp format can be easy converted to date format by using `new Date(1713906000)`
+Convert a timestamp with `new Date(payload.start)`.
 
 ```javacript
 {
-    start: '1713906000',
-    end: '1714078800'
+    start: 1713906000000,
+    end: 1714078800000
 }
 ```
+
+Two-way binding is available through `v-model:start-date` and `v-model:end-date`.
 
 ## Slots
 ### weekday
