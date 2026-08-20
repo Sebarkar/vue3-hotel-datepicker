@@ -1,1431 +1,1028 @@
-<script setup>
-import {onMounted, onUnmounted, reactive, ref, watch, computed} from "vue";
-import fecha from "fecha";
+<script setup lang="ts">
+import * as fecha from "fecha";
+import {
+  computed,
+  getCurrentInstance,
+  nextTick,
+  onBeforeUpdate,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+  type PropType,
+} from "vue";
 
-const props = defineProps({
-    format: {
-        default: "YYYY-MM-DD",
-        type: String,
-    },
-    startOfWeek: {
-        default: 'monday',
-        type: String,
-    },
-    separator: {
-        default: "-",
-        type: String,
-    },
-    selectedDates: {
-        default: false,
-        type: [Array, Boolean],
-    },
-    startDate: {
-        default: false,
-        type: [String, Boolean],
-    },
-    endDate: {
-        default: false,
-        type: [String, Boolean],
-    },
-    minDate: {
-        default: () => new Date(),
-    }, // The start view date. All the dates before this date will be disabled.
-    maxDate: {
-        default: () => false,
-        type: Boolean
-    }, // The end view date. All the dates after this date will be disabled.
-    disabledDaysOfWeek: {
-        default: () => []
-    },
-    moveBothMonths: {
-        default: false,
-        type: Boolean,
-    },
-    noCheckOutDates: {
-        default: () => []
-    },
-    noCheckInDates: {
-        default: () => []
-    },
-    noCheckInDaysOfWeek: {
-        default: () => []
-    },
-    noCheckOutDaysOfWeek: {
-        default: () => []
-    },
-    maxNights: 0,
-    minNights: 1,
-    singleMonthBreakpoint: {
-        default: 768,
-        type: [Number, String],
-    },
-    selectForward: Boolean,
-    showSingleMonth: Boolean,
-    disabledDates: {
-        default: false,
-        type: [Array, Boolean]
-    },
-    enableCheckout: Boolean,
-    weekDays: {
-        default: () => ["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
-        type: Array,
-    },
-    monthNames: {
-        default: () => ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-        type: Array,
-    },
-    i18n: {
-        default: () => ({
-            'not selected': 'Not selected',
-            'night': 'Night',
-            'nights': 'Nights',
-        }),
-        type: Object,
-    },
-})
+type DateInput = Date | string | number | false | null | undefined;
+type StartOfWeek = "monday" | "sunday";
+type I18nValue = string | string[];
+type I18nDictionary = Record<string, I18nValue>;
 
-const emits = defineEmits({
-    selected: ({start, end}) => true
-})
-// Hide tooltip on touch devices
-const inline = ref(true);
-const hoveringTooltip = ref(false);
-// Flag that checks if the datepicker is open
-const isOpen = ref(false);
-// Flag that checks if the second date of the range is set
-const changed = ref(false);
-// Flag that checks if we exit from the datepicker with the ESC key
-const justEsc = ref(false);
-// Flag that checks if we datepicker is on focus
-const isOnFocus = ref(false);
-const maxDays = ref(props.maxNights)
-const minDays = ref(props.minNights)
-// Start date of the selected range
-const start = ref(props.startDate ?? false);
-// End date of the selected range
-const end = ref(props.endDate ?? false);
-const input = ref(null);
-// Store last disabled date for later
-const lastDisabledDate = ref(null);
-// Store the datepicker month object for later
-const months = ref({});
-const isFirstDisabledDate = ref(0);
-const submitButton = ref(null);
-const clearButton = ref(null);
-// Flag that checks if the datepicker is open
-isOpen.value = false;
-// Flag that checks if the second date of the range is set
-changed.value = false;
-// Flag that checks if we exit from the datepicker with the ESC key
-justEsc.value = false;
-// Flag that checks if we datepicker is on focus
-isOnFocus.value = false;
-const startDateInstance = ref(props.startDate);
-const endDateInstance = ref(props.endDate);
-const disabledDatesTime = ref([]);
-
-const selectedDatesTmp = ref({
-    start: null,
-    end: null,
-});
-
-const datePickerObject = ref({
-    months: [],
-    open: true,
-    submitButton: false,
-    clearButton: false,
-    showSingleMonth: props.showSingleMonth,
-});
-const topBar = computed({
-    error: false,
-    textContent: '',
-    show: false,
-});
-
-const lang = (s) => {
-    // Return i18n string
-    return s in props.i18n ? props.i18n[s] : "";
-}
-const getWeekDayNames = () => {
-    let week = [];
-
-    // Start from monday if we passed that option
-    if (props.startOfWeek === "monday") {
-        for (let i = 0; i < 7; i++) {
-            week.push(props.weekDays[(1 + i) % 7]);
-        }
-        return week;
-    }
-
-    // Otherwise start from sunday (default)
-    for (let i = 0; i < 7; i++) {
-        week.push(props.weekDays[i]);
-    }
-    return week;
+interface CalendarDay {
+  date: Date;
+  type: "lastMonth" | "visibleMonth" | "nextMonth";
+  day: number;
+  time: number;
+  tabindex: number;
+  attributes: string[];
+  isCurrentMonth: boolean;
+  isValid: boolean;
+  isNoCheckIn: boolean;
+  isNoCheckOut: boolean;
+  isToday: boolean;
+  isDisabled: boolean;
+  disabled: boolean;
+  isCheckOutEnabled: boolean;
+  isDayBeforeDisabledDate: boolean;
+  isCheckInOnly: boolean;
+  isDayWithExtraText: boolean;
+  isFirstDaySelected: boolean;
+  isLastDaySelected: boolean;
+  isSelected: boolean;
+  isHovering: boolean;
+  isTmpValid: boolean;
+  isTmp: boolean;
 }
 
-const getMonthName = (m) => {
-    // Get month name
-    return props.monthNames[m];
+interface CalendarMonth {
+  name: string;
+  month: number;
+  year: number;
+  id: string;
+  days: CalendarDay[];
+  nextBtn: boolean;
+  prevBtn: boolean;
 }
 
-const getNextMonth = (month) => {
-    // Get next month date
-    const _m = new Date(month.valueOf());
-    return new Date(_m.setMonth(_m.getMonth() + 1, 1));
-}
-
-const getPrevMonth = (month) => {
-    // Get previous month date
-    const _m = new Date(month.valueOf());
-    return new Date(_m.setMonth(_m.getMonth() - 1, 1));
-}
-
-const getDateString = (date, formating = null) => {
-    let format = formating ?? props.format;
-    // Format date
-    return fecha.format(date, format);
-}
-const parseDate = (date, formating = null) => {
-    let format = formating ?? props.format;
-    // Parse a date object
-    return fecha.parse(date, format);
-}
-const init = () => {
-    // Set the minimum of days required by the daterange
-    minDays.value = props.minNights > 1 ? props.minNights + 1 : 2;
-
-    // Set the maximum of days required by the daterange
-    maxDays.value = props.maxNights > 0 ? props.maxNights + 1 : 0;
-    // Set startDate if we passed that option
-    if (props.startDate && typeof props.startDate === "string") {
-        startDateInstance.value = parseDate(props.startDate);
-    }
-
-    // Set endDate if we passed that option
-    if (props.endDate && typeof props.endDate === "string") {
-        endDateInstance.value = parseDate(endDateInstance.value);
-    }
-
-    // Parse disabled dates
-    if (props.disabledDates.length > 0) {
-        parseDisabledDates();
-    }
-
-    // Parse disabled days
-    if (props.disabledDaysOfWeek.length > 0) {
-        getDisabledDays();
-    }
-
-    if (startDateInstance.value && endDateInstance.value) {
-        // Set the date range
-        setRange(startDateInstance.value, endDateInstance.value);
-    } else {
-        noSelectionBuild(); // mutate datePickerObject
-    }
-
-    if (clearButton.value) {
-        if (inline.value || !start.value && !end.value) {
-            datePickerObject.value.clearButton = true;
-        }
-    }
-
-    // Flag for first disabled date
-    isFirstDisabledDate.value = 0;
-
-    // Holds last disabled date
-    lastDisabledDate.value = false;
-}
-const addMonth = (date, month) => {
-    //Avoid mutating properties in original Date Object by linking it to the new object
-    date = new Date(date);
-    let monthInstance = {
-        name: getMonthName(date.getMonth()),
-        month: date.getMonth(),
-        year: date.getFullYear(),
-        id: date.getFullYear() + date.getMonth(),
-        days: [],
-        nextBtn: true,
-        prevBtn: true,
-    }
-    date.setHours(0, 0, 0, 0);
-
-    // Show month table and create the necessary HTML code
-    monthInstance.days = createMonthObject(date)
-    // Append the month
-    datePickerObject.value.months.splice(month - 1, 1, monthInstance);
-
-    // Check day dates
-    updateSelectableRange();
-
-    // Store current month dates
-    months.value["month" + month] = date;
-}
-
-const defaultDay = {
-    date: {},
-    type: '',
-    day: '',
-    time: '',
-    isValid: false,
-    isTmp: false,
-    isCurrentMonth: false,
-    isToday: false,
-    isNoCheckIn: false,
-    isNoCheckOut: false,
-    isDisabled: false,
-    isDayOfWeekDisabled: false,
-    isFirstEnabledDate: false,
-    isCheckInOnly: false,
-    isDayBeforeDisabledDate: false,
-}
-
-const createMonthObject = (_date) => {
-    const days = [];
-    const result = [];
-    let valid;
-    _date.setDate(1);
-    let dayOfWeek = _date.getDay();
-    const currentMonth = _date.getMonth();
-    if (dayOfWeek === 0 && props.startOfWeek === "monday") {
-        // Add one week
-        dayOfWeek = 7;
-    }
-
-    // If the first day is in the middle of the week, push also
-    // the first days of the week (the days before our first day).
-    // We need a complete week row.
-    // Obviously, these days are part of the previous month.
-    if (dayOfWeek > 0) {
-        for (let i = dayOfWeek; i > 0; i--) {
-            const _day = new Date(_date.getTime() - 86400000 * i);
-
-            // Check if the day is valid. And pass this property to the days object
-            valid = isValidDate(_day.getTime());
-            if (props.minDate && compareDay(_day, props.minDate) < 0 || props.maxDate && compareDay(_day, props.maxDate) > 0) {
-                valid = false;
-            }
-
-            // We pass the type property to know if the day is part of the
-            // previous month. We already know that it is true.
-            days.push(
-                Object.assign({}, defaultDay, {
-                    date: _day,
-                    type: "lastMonth",
-                    day: _day.getDate(),
-                    time: _day.getTime(),
-                    isValid: valid,
-                })
-            );
-        }
-    }
-
-    // Push 40 days. Each month table needs the days of the month plus
-    // the remaining days (of the week row) before the first day of the month
-    // and after the last day of the month. (PS. They will be hidden)
-    // 40 days are enough to cover all the possibilities.
-    for (let i = 0; i < 40; i++) {
-        const _day = addDays(_date, i);
-
-        // Check if the day is valid. And pass this property to the days object
-        valid = isValidDate(_day.getTime());
-        if (props.minDate && compareDay(_day, props.minDate) < 0 || props.maxDate && compareDay(_day, props.maxDate) > 0) {
-            valid = false;
-        }
-
-        // We pass the type property to know if the day is part of the
-        // current month or part of the next month
-        days.push(Object.assign({}, defaultDay, {
-            date: _day,
-            type: _day.getMonth() === currentMonth ? "visibleMonth" : "nextMonth",
-            day: _day.getDate(),
-            time: _day.getTime(),
-            isCurrentMonth: _day.getMonth() === currentMonth,
-            isValid: valid,
-        }));
-    }
-
-    // Create the week rows.
-    for (let week = 0; week < 6; week++) {
-        // Iterate the days object week by week.
-        // If the last day is part of the next month, stop the loop.
-        if (days[week * 7].type === "nextMonth") {
-            break;
-        }
-
-        // Create the days of a week, one by one
-        for (let i = 0; i < 7; i++) {
-            let _day = props.startOfWeek === "monday" ? i + 1 : i;
-            _day = days[week * 7 + _day];
-            result.push(fillDayState(_day));
-        }
-    }
-
-    return result;
-}
-const fillDayState = (_day) => {
-    const isToday = getDateString(_day.time) === getDateString(new Date());
-    const isStartDate = getDateString(_day.time) === getDateString(props.minDate);
-    let isDisabled = false;
-    let isNoCheckIn = false;
-    let isNoCheckOut = false;
-    let isDayOfWeekDisabled = false;
-    let isFirstEnabledDate = false;
-
-    // Day between disabled dates and the last day
-    // before the disabled date
-    let isDayBeforeDisabledDate = false;
-
-    // Check if the day is one of the days passed in the
-    // (optional) disabledDates option. And set valid to
-    // false in this case.
-    //
-    // Also, check if the checkin or checkout is disabled
-    if (_day.valid || _day.type === "visibleMonth") {
-        const dateString = getDateString(_day.time, "YYYY-MM-DD");
-        if (props.disabledDates.length > 0) {
-            // Check if this day is between two disabled dates
-            // and disable it if there are not enough days
-            // available to select a valid range
-            const limit = getClosestDisabledDates(_day.date);
-
-            // Consider also the day before startDate
-            // as disabled date
-            if (limit[0] === false) {
-                limit[0] = substractDays(startDateInstance.value, 1);
-            }
-            if (limit[0] && limit[1]) {
-                if (compareDay(_day.date, limit[0]) && countDays(limit[0], limit[1]) - 2 > 0) {
-                    const daysBeforeNextDisabledDate = countDays(limit[1], _day.date) - 1;
-                    const daysAfterPrevDisabledDate = countDays(_day.date, limit[0]) - 1;
-                    if (props.selectForward && daysBeforeNextDisabledDate < minDays.value) {
-                        _day.isValid = false;
-                    } else if (!props.selectForward && daysBeforeNextDisabledDate < minDays.value && daysAfterPrevDisabledDate < minDays.value) {
-                        _day.isValid = false;
-                    }
-                    if (!_day.isValid && props.enableCheckout && daysBeforeNextDisabledDate === 2) {
-                        isDayBeforeDisabledDate = true;
-                    }
-                }
-            }
-            if (props.disabledDates.indexOf(dateString) > -1) {
-                _day.isValid = false;
-                isDisabled = true;
-                isFirstDisabledDate.value++;
-
-                // Store last disabled date for later
-                lastDisabledDate.value = _day.date;
-            } else {
-                isFirstDisabledDate.value = 0;
-            }
-
-            // First day after a disabled day
-            if (_day.isValid && lastDisabledDate.value && compareDay(_day.date, lastDisabledDate.value) > 0 && countDays(_day.date, lastDisabledDate.value) === 2) {
-                isFirstEnabledDate = true;
-            }
-        }
-        if (props.disabledDaysOfWeek.length > 0) {
-            if (props.disabledDaysOfWeek.indexOf(fecha.format(_day.time, "ddd")) > -1) {
-                _day.isValid = false;
-                isDayOfWeekDisabled = true;
-            }
-        }
-        if (props.noCheckInDates.length > 0) {
-            if (props.noCheckInDates.indexOf(dateString) > -1) {
-                isNoCheckIn = true;
-                isFirstEnabledDate = false;
-            }
-        }
-        if (props.noCheckOutDates.length > 0) {
-            if (props.noCheckOutDates.indexOf(dateString) > -1) {
-                isNoCheckOut = true;
-            }
-        }
-        if (props.noCheckInDaysOfWeek.length > 0) {
-            if (props.noCheckInDaysOfWeek.indexOf(fecha.format(_day.time, "ddd")) > -1) {
-                isNoCheckIn = true;
-                isFirstEnabledDate = false;
-            }
-        }
-        if (props.noCheckOutDaysOfWeek.length > 0) {
-            if (props.noCheckOutDaysOfWeek.indexOf(fecha.format(_day.time, "ddd")) > -1) {
-                isNoCheckOut = true;
-            }
-        }
-    }
-
-    _day.isToday = isToday
-    _day.isDisabled = isDisabled
-    _day.isCheckOutEnabled = !(isDisabled && props.enableCheckout && isFirstDisabledDate.value === 1)
-    _day.isDayBeforeDisabledDate = isDayBeforeDisabledDate
-    _day.isCheckInOnly = isStartDate || isFirstEnabledDate
-    _day.isNoCheckIn = isNoCheckIn
-    _day.isNoCheckOut = isNoCheckOut
-    _day.isDayOfWeekDisabled = isDayOfWeekDisabled
-
-    return _day;
-}
-const checkAndSetDayClasses = () => {
-    // Get every td in the months table: our days
-    // Iterate each day and re-check HTML classes
-    for (let i = 0; i < datePickerObject.value.months.length; i++) {
-        for (let y = 0; y < datePickerObject.value.months[i].days.length; y++) {
-            const time = parseInt(datePickerObject.value.months[i].days[y].time, 10);
-            const day = new Date(time);
-            let valid;
-
-            // Check if the day is valid. And pass this property to the days object
-            valid = isValidDate(day.getTime());
-            if (props.minDate && compareDay(day, props.minDate) < 0 || props.maxDate && compareDay(day, props.maxDate) > 0) {
-                valid = false;
-            }
-            datePickerObject.value.months[i].days[y].isValid = valid;
-            datePickerObject.value.months[i].days[y] = fillDayState(datePickerObject.value.months[i].days[y]);
-        }
-    }
-}
-const noSelectionBuild = () => {
-    addMonth(props.minDate, 1);
-    addMonth(getNextMonth(props.minDate), 2);
-
-    // Disable (if needed) the prev/next buttons
-    disableNextPrevButtons();
-}
-const setDateRange = (date1, date2, ...arg) => {
-    let onresize = arg.length > 0 && arg[0] !== undefined ? arg[0] : false;
-    // Swap dates if needed
-    if (date1.getTime() > date2.getTime()) {
-        let tmp = date2;
-        date2 = date1;
-        date1 = tmp;
-        tmp = null;
-    }
-    let valid = true;
-
-    // Check the validity of the dates
-    if (props.minDate && compareDay(date1, props.minDate) < 0 || props.maxDate && compareDay(date2, props.maxDate) > 0) {
-        valid = false;
-    }
-
-    // If not valid, reset the datepicker
-    if (!valid) {
-        noSelectionBuild();
-        return;
-    }
-
-    // Fix DST
-    date1.setTime(date1.getTime() + 12 * 60 * 60 * 1000);
-    date2.setTime(date2.getTime() + 12 * 60 * 60 * 1000);
-
-    // Calculate the next month value
-    start.value = date1.getTime();
-    end.value = date2.getTime();
-    if (compareDay(date1, date2) > 0 && compareMonth(date1, date2) === 0) {
-        date2 = getNextMonth(date1);
-    }
-    if (compareMonth(date1, date2) === 0) {
-        date2 = getNextMonth(date1);
-    }
-
-    // Add the months
-    addMonth(date1, 1);
-    addMonth(date2, 2);
-
-    // Show selected days in the calendar
-    updateSelectedDays();
-
-    // Disable (if needed) the prev/next buttons
-    disableNextPrevButtons();
-
-    // Check the selection
-    checkSelection();
-}
-const updateSelectedDays = () => {
-
-    // Return early if we don't have the start and end dates
-    if (!start.value && !end.value) {
-        return;
-    }
-
-    // Iterate each day and assign an appropriate HTML class
-    // if they are selected in the date range
-    for (let i = 0; i < datePickerObject.value.months.length; i++) {
-        for (let y = 0; y < datePickerObject.value.months[i].days.length; y++) {
-            const newDay = datePickerObject.value.months[i].days[y];
-            const time = parseInt(newDay.time, 10);
-
-            // Change isSelected property
-            if (start.value && end.value && end.value >= time && start.value <= time || start.value && !end.value && getDateString(start.value, "YYYY-MM-DD") === getDateString(time, "YYYY-MM-DD")) {
-                newDay.isSelected = true;
-            } else {
-                newDay.isSelected = false;
-            }
-
-            // First day of the range
-            if (start.value && getDateString(start.value, "YYYY-MM-DD") === getDateString(time, "YYYY-MM-DD")) {
-                newDay.isFirstDaySelected = true;
-            } else {
-                newDay.isFirstDaySelected = false;
-            }
-
-            // Last day of the range
-            if (end.value && getDateString(end.value, "YYYY-MM-DD") === getDateString(time, "YYYY-MM-DD")) {
-                newDay.isLastDaySelected = true;
-            } else {
-                newDay.isLastDaySelected = false;
-            }
-            datePickerObject.value.months[i].days[y] = Object.assign({}, newDay)
-        }
-    }
-}
-const dayClicked = (day, monthId) => {
-    if (!day.isValid || !day.isCurrentMonth) {
-        return;
-    }
-    const isSelectStart = selectedDatesTmp.value.start === null;
-    const time = parseInt(day.time, 10);
-
-    // Return if same day clicked. Prevent one day selection (logic for range selection only)
-    if (selectedDatesTmp.value.start && selectedDatesTmp.value.start.time === day.time) {
-        return;
-    }
-
-    // Return early for those days where the checkin or checkout is disabled
-    if (isSelectStart) {
-        if (day.isNoCheckIn) {
-            return;
-        }
-    } else if (start.value) {
-        if (start.value > time && day.isNoCheckIn) {
-            return;
-        }
-        if (selectedDatesTmp.value.start) {
-            if (selectedDatesTmp.value.start.isNoCheckIn && start.value > time) {
-                return;
-            }
-        }
-        if (day.isNoCheckOut && time > start.value) {
-            return;
-        }
-    }
-
-    if (isSelectStart) {
-        selectedDatesTmp.value.start = day;
-        start.value = time;
-        end.value = false;
-    } else if (start.value) {
-        selectedDatesTmp.value.end = day;
-        end.value = time;
-        hidePopover();
-    }
-
-    // Swap dates if they are inverted
-    if (start.value && end.value && start.value > end.value) {
-        const tmp = end.value;
-        end.value = start.value;
-        start.value = tmp;
-    }
-    start.value = parseInt(start.value, 10);
-    end.value = parseInt(end.value, 10);
-
-    // Remove hovering class from every day and hide tooltip
-    clearHovering();
-
-    // Show hover
-    if (start.value && !end.value) {
-        // Add hovering class
-        dayHovering(day);
-    }
-    // Check day dates
-    updateSelectableRange();
-
-    // Check the selection
-    checkSelection();
-
-
-    // Check dates again after selection
-    if (start.value && end.value) {
-        checkAndSetDayClasses();
-    }
-
-    // Show selected days in the calendar
-    updateSelectedDays();
-
-
-    // Handle event select pass properties outside
-    if (end.value) {
-        emits("selected", {start: start.value, end: end.value});
-    }
-
-    selectedDatesTmp.value.end ? dropTmpValuesForSelection() : null;
-}
-
-const dropTmpValuesForSelection = () => {
-    // Drop temporary values for selection
-    selectedDatesTmp.value.start = null;
-    selectedDatesTmp.value.end = null;
-}
-const isValidDate = (time) => {
-    // Check if the date is valid
-    time = parseInt(time, 10);
-    if (props.minDate && compareDay(time, props.minDate) < 0 || props.maxDate && compareDay(time, props.maxDate) > 0) {
-        return false;
-    }
-    // Update valid dates during the selection
-    if (start.value && !end.value) {
-        // Check maximum/minimum days
-
-        if (maxDays.value > 0 && countDays(time, start.value) > maxDays.value || minDays.value > 0 && countDays(time, start.value) > 1 && countDays(time, start.value) < minDays.value) {
-            return false;
-        }
-
-        // Check if date is before first date of range
-        if (props.selectForward && time < start.value) {
-            return false;
-        }
-
-        // Check the disabled dates
-        if (props.disabledDates.length > 0) {
-            const limit = getClosestDisabledDates(new Date(parseInt(start.value, 10)));
-            if (limit[0] && compareDay(time, limit[0]) <= 0) {
-                return false;
-            }
-            if (limit[1] && compareDay(time, limit[1]) >= 0) {
-                return false;
-            }
-        }
-
-        // Check disabled days of week
-        if (props.disabledDaysOfWeek.length > 0) {
-            const limit = getClosestDisabledDays(new Date(parseInt(start.value, 10)));
-            if (limit[0] && compareDay(time, limit[0]) <= 0) {
-                return false;
-            }
-            if (limit[1] && compareDay(time, limit[1]) >= 0) {
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-const clearSelectedDates = () => {
-    for (let i = 0; i < datePickerObject.value.months.length; i++) {
-        for (let y = 0; y < datePickerObject.value.months[i].days.length; y++) {
-            datePickerObject.value.months[i].days[y].selected = false;
-            datePickerObject.value.months[i].days[y].isFirstDaySelected = false;
-            datePickerObject.value.months[i].days[y].isLastDaySelected = false;
-        }
-    }
-    return true;
-}
-
-const checkSelection = () => {
-    const numberOfDays = countDays(end.value, start.value);
-    if (maxDays.value && numberOfDays > maxDays.value) {
-        start.value = false;
-        end.value = false;
-
-        // Remove selected class from each day
-
-        clearSelectedDates();
-    } else if (minDays.value && numberOfDays < minDays.value) {
-        start.value = false;
-        end.value = false;
-
-        // Remove selected class from each day
-        clearSelectedDates();
-    }
-}
-const addDays = (date, days) => {
-    // Add xx days to date
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
-const substractDays = (date, days) => {
-    // Substract xx days to date
-    const result = new Date(date);
-    result.setDate(result.getDate() - days);
-    return result;
-}
-const countDays = (start, end) => {
-    // Return days between two dates
-    return Math.abs(daysFrom1970(start) - daysFrom1970(end)) + 1;
-}
-const compareDay = (day1, day2) => {
-    // Compare two days: check if day1 is before/after/same day of day2
-    const p = parseInt(getDateString(day1, "YYYYMMDD"), 10) - parseInt(getDateString(day2, "YYYYMMDD"), 10);
-    if (p > 0) {
-        return 1;
-    }
-    if (p === 0) {
-        return 0;
-    }
-    return -1;
-}
-const compareMonth = (month1, month2) => {
-    // Compare two months: check if month1 is before/after/same month of month2
-    const p = parseInt(getDateString(month1, "YYYYMM"), 10) - parseInt(getDateString(month2, "YYYYMM"), 10);
-    if (p > 0) {
-        return 1;
-    }
-    if (p === 0) {
-        return 0;
-    }
-    return -1;
-}
-const daysFrom1970 = (t) => {
-    // Get days from 1970
-    return Math.round(toLocalTimestamp(t) / 86400000);
-}
-const toLocalTimestamp = (t) => {
-    // Convert timestamp to local timestamp
-    if (typeof t === "object" && t.getTime) {
-        t = t.getTime();
-    }
-    if (typeof t === "string" && !t.match(/\d{13}/)) {
-        t = parseDate(t).getTime();
-    }
-    t = parseInt(t, 10) - new Date().getTimezoneOffset() * 60 * 1000;
-    return t;
-}
-const goToNextMonth = (month, index) => {
-    const isMonth2 = index === 1;
-    let nextMonth = isMonth2 ? months.value['month2'] : months.value['month1'];
-    nextMonth = getNextMonth(nextMonth);
-
-    // Dont't go to the next month if:
-    // 1. The second month is visible and it is the next month after
-    //    our current month
-    // 2. The month is after the (optional) endDate. There's no need
-    //    to show other months in this case.
-    if (!isSingleMonth() && !isMonth2 && compareMonth(nextMonth, months.value['month2']) >= 0 || isMonthOutOfRange(nextMonth)) {
-        return false;
-    }
-
-    // We can now show the month and proceed
-    if ((props.moveBothMonths) && isMonth2) {
-        addMonth(months.value['month2'], 1);
-    }
-    addMonth(nextMonth, index + 1);
-    updateSelectedDays();
-    disableNextPrevButtons();
-    return true;
-}
-const goToPreviousMonth = (month, index) => {
-    const isMonth2 = index === 1;
-    let prevMonth = isMonth2 ? months.value['month2'] : months.value['month1'];
-    prevMonth = getPrevMonth(prevMonth);
-
-    // Dont't go to the previous month if:
-    // 1. The click it's in the second month and the month we need is already
-    //    shown in the first month
-    // 2. The month is before the (optional) startDate. There's no need
-    //    to show other months in this case.
-    if (isMonth2 && compareMonth(prevMonth, months.value['month1']) <= 0 || isMonthOutOfRange(prevMonth)) {
-        return false;
-    }
-
-    // We can now show the month and proceed
-    if ((props.moveBothMonths) && !isMonth2) {
-        addMonth(months.value['month1'], 2);
-    }
-    addMonth(prevMonth, index + 1);
-    updateSelectedDays();
-    disableNextPrevButtons();
-    return true;
-}
-const isSingleMonth = () => props.showSingleMonth || showSingleMonthBasedOnWindow();
-const showSingleMonthBasedOnWindow = () => {
-    if (typeof window === 'undefined') {
-        return false;
-    }
-    return window.innerWidth < +props.singleMonthBreakpoint;
-}
-const isMonthOutOfRange = (month) => {
-    const _m = new Date(month.valueOf());
-    // Return true for months before the startDate and months after the endDate
-    return props.minDate && new Date(_m.getFullYear(), _m.getMonth() + 1, 0, 23, 59, 59) < props.minDate || props.maxDate && new Date(_m.getFullYear(), _m.getMonth(), 1) > props.maxDate;
-}
-
-// Disable next/prev buttons according to the value of the prev/next
-// month. We don't want two same months at the same time!
-const disableNextPrevButtons = () => {
-    if (isSingleMonth()) {
-        if (isMonthOutOfRange(getPrevMonth(months.value.month1))) {
-            datePickerObject.value.months[0].prevBtn = false;
-        } else {
-            datePickerObject.value.months[0].prevBtn = true;
-        }
-        if (isMonthOutOfRange(getNextMonth(months.value.month1))) {
-            datePickerObject.value.months[0].nextBtn = false;
-        } else {
-            datePickerObject.value.months[0].nextBtn = true;
-        }
-        return;
-    }
-    const _month1 = parseInt(getDateString(months.value.month1, "YYYYMM"), 10);
-    const _month2 = parseInt(getDateString(months.value.month2, "YYYYMM"), 10);
-    const d = Math.abs(_month1 - _month2);
-    if (d > 1 && d !== 89) {
-        datePickerObject.value.months[0].nextBtn = true;
-        datePickerObject.value.months[1].prevBtn = true;
-    } else {
-        datePickerObject.value.months[0].nextBtn = false;
-        datePickerObject.value.months[1].prevBtn = false;
-    }
-    if (isMonthOutOfRange(getPrevMonth(months.value.month1))) {
-        datePickerObject.value.months[0].prevBtn = false;
-    } else {
-        datePickerObject.value.months[0].prevBtn = true;
-    }
-    if (isMonthOutOfRange(getNextMonth(months.value.month2))) {
-        datePickerObject.value.months[1].nextBtn = false;
-    } else {
-        datePickerObject.value.months[1].nextBtn = true;
-    }
-}
-const updateSelectableRange = () => {
-    const isSelecting = start.value && !end.value;
-    // Add needed classes
-    for (let x = 0; x < datePickerObject.value.months.length; x++) {
-        for (let i = 0; i < datePickerObject.value.months[x].days.length; i++) {
-            let newDay = datePickerObject.value.months[x].days[i];
-
-            if (!newDay.isValid && newDay.isTmp) {
-                newDay.isTmp = false;
-                if (!newDay.isTmpValid) {
-                    newDay.isTmpValid = true;
-                } else {
-                    newDay.isValid = true;
-                }
-            }
-            // Update day classes during the date range selection
-            if (isSelecting) {
-                if (newDay.isCurrentMonth && (newDay.isValid || newDay.isDisabled || newDay.isBeforeDisabledDate)) {
-                    const time = parseInt(newDay.time, 10);
-                    if (isValidDate(time)) {
-                        newDay.isValid = true;
-                        newDay.isTmp = true;
-                        newDay.isDisabled = false;
-                    } else {
-                        if (!newDay.valid) {
-                            newDay.isTmpValid = false;
-                        }
-                        newDay.isValid = false;
-                        newDay.isTmp = true;
-                    }
-                }
-            } else if (newDay.checkOutEnabled || newDay.beforeDisabledDate) {
-                // At the end of the selection, restore the disabled/invalid class for
-                // days where the checkout is enabled. We need to check this when the
-                // autoclose option is false. The same for the day just before the
-                // disabled date
-                newDay.isValid = false;
-                if (!newDay.beforeDisabledDate) {
-                    newDay.isDisabled = true;
-                }
-            }
-
-            datePickerObject.value.months[x].days.splice(i, 1, newDay);
-        }
-    }
-    return true;
-}
-const dayHovering = (day, monthIndex) => {
-    const hoverTime = parseInt(day.time, 10);
-    if (day.isValid && selectionAllowed(day)) {
-        // Iterate each day and add the hovering props
-        for (let x = 0; x < datePickerObject.value.months.length; x++) {
-            for (let i = 0; i < datePickerObject.value.months[x].days.length; i++) {
-                const time = parseInt(datePickerObject.value.months[x].days[i].time, 10);
-                if (time === hoverTime) {
-                    datePickerObject.value.months[x].days[i].isHovering = true;
-                } else {
-                    datePickerObject.value.months[x].days[i].isHovering = false;
-                }
-                if (start.value && !end.value && (start.value < time && hoverTime >= time || start.value > time && hoverTime <= time)) {
-                    datePickerObject.value.months[x].days[i].isHovering = true;
-                } else {
-                    datePickerObject.value.months[x].days[i].isHovering = false;
-                }
-            }
-        }
-        // Generate date range popup
-        if (start.value && !end.value) {
-            popup.count = countDays(hoverTime, start.value) - 1;
-        }
-    }
-}
-const clearHovering = () => {
-    // Set hovering property to false
-    for (let x = 0; x < datePickerObject.value.months.length; x++) {
-        for (let i = 0; i < datePickerObject.value.months[x].days.length; i++) {
-            datePickerObject.value.months[x].days[i].isHovering = false;
-        }
-    }
-}
-const parseDisabledDates = () => {
-    // Sort disabled dates and store it in property
-    const _tmp = [];
-    for (let i = 0; i < props.disabledDates.length; i++) {
-        _tmp[i] = fecha.parse(props.disabledDates[i], "YYYY-MM-DD");
-    }
-    _tmp.sort((a, b) => {
-        return a - b;
-    });
-    disabledDatesTime.value = _tmp;
-}
-const getClosestDisabledDates = (x) => {
-    // This method implements part of the work done by the user Zeta
-    // http://stackoverflow.com/a/11795472
-
-    // Return an array with two elements:
-    // - The closest date on the left
-    // - The closest date on the right
-    let dates = [false, false];
-
-    // If the day is before the first disabled date return early
-    if (x < disabledDatesTime.value[0]) {
-        // Add one day if we want include the checkout
-        if (props.enableCheckout) {
-            dates = [false, addDays(disabledDatesTime.value[0], 1)];
-            // Otherwise use the first date of the array
-        } else {
-            dates = [false, disabledDatesTime.value[0]];
-        }
-
-        // If the day is after the last disabled date return early
-    } else if (x > disabledDatesTime.value[disabledDatesTime.value.length - 1]) {
-        dates = [disabledDatesTime.value[disabledDatesTime.value.length - 1], false];
-        // Otherwise calculate the closest dates
-    } else {
-        let bestPrevDate = disabledDatesTime.value.length;
-        let bestNextDate = disabledDatesTime.value.length;
-
-        const maxDateValue = Math.abs(new Date(0, 0, 0).valueOf());
-
-        let bestPrevDiff = maxDateValue;
-        let bestNextDiff = -maxDateValue;
-        let currDiff = 0;
-        let i;
-        for (i = 0; i < disabledDatesTime.value.length; ++i) {
-            currDiff = x - disabledDatesTime.value[i];
-            if (currDiff < 0 && currDiff > bestNextDiff) {
-                bestNextDate = i;
-                bestNextDiff = currDiff;
-            }
-            if (currDiff > 0 && currDiff < bestPrevDiff) {
-                bestPrevDate = i;
-                bestPrevDiff = currDiff;
-            }
-        }
-        if (disabledDatesTime.value[bestPrevDate]) {
-            dates[0] = disabledDatesTime.value[bestPrevDate];
-        }
-        if (typeof disabledDatesTime.value[bestPrevDate] === "undefined") {
-            dates[1] = false;
-            // Add one day if we want include the checkout
-        } else if (props.enableCheckout) {
-            dates[1] = addDays(disabledDatesTime.value[bestNextDate], 1);
-            // Otherwise use the date of the array
-        } else {
-            dates[1] = disabledDatesTime.value[bestNextDate];
-        }
-    }
-    return dates;
-}
-
-const disabledDaysIndexes = ref([]);
-const getDisabledDays = () => {
-    const allDays = [];
-    const disabledDays = [];
-    const day = new Date();
-    for (let i = 0; i < 7; i++) {
-        const _date = addDays(day, i);
-        allDays[fecha.format(_date, "d")] = fecha.format(_date, "ddd");
-    }
-
-    for (let i = 0; i < props.disabledDaysOfWeek.length; i++) {
-        disabledDays.push(allDays.indexOf(props.disabledDaysOfWeek[i]));
-    }
-    disabledDays.sort();
-    disabledDaysIndexes.value = disabledDays;
-}
-const getClosestDisabledDays = (day) => {
-    // Return an array with two elements:
-    // - The closest date on the left
-    // - The closest date on the right
-    const dates = [false, false];
-    for (let i = 0; i < 7; i++) {
-        const _date = substractDays(day, i);
-        if (disabledDaysIndexes.value.indexOf(parseInt(fecha.format(_date, "d"), 10)) > -1) {
-            dates[0] = _date;
-            break;
-        }
-    }
-    for (let i = 0; i < 7; i++) {
-        const _date = addDays(day, i);
-        if (disabledDaysIndexes.value.indexOf(parseInt(fecha.format(_date, "d"), 10)) > -1) {
-            dates[1] = _date;
-            break;
-        }
-    }
-    return dates;
-}
-const replacei18n = (string, value) => {
-    return string.replace("%s", value);
-}
-const setRange = (d1, d2) => {
-    if (typeof d1 === "string" && typeof d2 === "string") {
-        d1 = parseDate(d1);
-        d2 = parseDate(d2);
-    } else {
-        d1 = new Date(d1.getTime());
-        d2 = new Date(d2.getTime());
-    }
-    setDateRange(d1, d2);
-}
-
-const popup = reactive(
-    {
-        show: false,
-        top: 0,
-        left: 0,
-        width: 0,
-        count: 0,
-        error: false,
-    }
-)
-
-const hidePopover = () => popup.show = false;
-
-const selectionAllowed = (day) => {
-    if (!day.isValid || !day.isCurrentMonth) {
-        return false;
-    }
-    return true;
-}
-const showPopover = (event, day) => {
-    //Prevent handle when selecting not started or already ended
-    if (!selectedDatesTmp.value.start || selectedDatesTmp.value.start && selectedDatesTmp.value.end || !selectionAllowed(day)) {
-        return false;
-    }
-    popup.show = true;
-    const parentRect = parent.value.getBoundingClientRect();
-    const childRect = event.target.getBoundingClientRect();
-    popup.top = childRect.top - parentRect.top - 35;
-    popup.left = childRect.left - parentRect.left;
-    popup.width = childRect.width;
+const DEFAULT_I18N: I18nDictionary = {
+  selected: "Your stay:",
+  night: "Night",
+  nights: "Nights",
+  button: "Close",
+  clearButton: "Clear",
+  submitButton: "Submit",
+  "checkin-disabled": "Check-in disabled",
+  "checkout-disabled": "Check-out disabled",
+  "day-names-short": ["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
+  "day-names": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+  "month-names-short": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  "month-names": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+  "error-more": "Date range should not be more than 1 night",
+  "error-more-plural": "Date range should not be more than %d nights",
+  "error-less": "Date range should not be less than 1 night",
+  "error-less-plural": "Date range should not be less than %d nights",
+  "not selected": "Not selected",
+  "info-more": "Please select a date range of at least 1 night",
+  "info-more-plural": "Please select a date range of at least %d nights",
+  "info-range": "Please select a date range between %d and %d nights",
+  "info-range-equal": "Please select a date range of %d nights",
+  "info-default": "Please select a date range",
+  "aria-application": "Calendar",
+  "aria-selected-checkin": "Selected as check-in date, %s",
+  "aria-selected-checkout": "Selected as check-out date, %s",
+  "aria-selected": "Selected, %s",
+  "aria-disabled": "Not available, %s",
+  "aria-choose-checkin": "Choose %s as your check-in date",
+  "aria-choose-checkout": "Choose %s as your check-out date",
+  "aria-prev-month": "Move backward to the previous month",
+  "aria-next-month": "Move forward to the next month",
+  "aria-clear-button": "Clear the selected dates",
+  "select-checkout": "Select a check-out date",
+  "forward-only": "Please select a check-out date after check-in",
+  "same-day": "Check-out must be after check-in",
+  multiple: "The stay must be a multiple of %d nights",
+  unavailable: "This date range is not available",
 };
 
-// Required for the popover position
-const parent = ref(null);
+const props = defineProps({
+  format: { type: String, default: "YYYY-MM-DD" },
+  startOfWeek: { type: String as PropType<StartOfWeek>, default: "monday" },
+  separator: { type: String, default: "-" },
+  selectedDates: { type: [Array, Boolean] as PropType<DateInput[] | false>, default: false },
+  startDate: { type: [Date, String, Number, Boolean] as PropType<DateInput>, default: false },
+  endDate: { type: [Date, String, Number, Boolean] as PropType<DateInput>, default: false },
+  minDate: { type: [Date, String, Number, Boolean] as PropType<DateInput>, default: () => new Date() },
+  maxDate: { type: [Date, String, Number, Boolean] as PropType<DateInput>, default: false },
+  disabledDaysOfWeek: { type: Array as PropType<string[]>, default: () => [] },
+  showTopbar: { type: Boolean, default: false },
+  moveBothMonths: { type: Boolean, default: false },
+  ariaDayFormat: { type: String, default: "dddd, MMMM DD, YYYY" },
+  noCheckOutDates: { type: Array as PropType<DateInput[]>, default: () => [] },
+  noCheckInDates: { type: Array as PropType<DateInput[]>, default: () => [] },
+  noCheckInDaysOfWeek: { type: Array as PropType<string[]>, default: () => [] },
+  noCheckOutDaysOfWeek: { type: Array as PropType<string[]>, default: () => [] },
+  maxNights: { type: Number, default: 0 },
+  minNights: { type: Number, default: 1 },
+  singleMonthBreakpoint: { type: [Number, String, Boolean] as PropType<number | string | false>, default: 768 },
+  topbarPosition: { type: String as PropType<"top" | "bottom">, default: "top" },
+  onOpenDatepicker: { type: Boolean, default: false },
+  minNightsMultiple: { type: Boolean, default: false },
+  selectForward: { type: Boolean, default: false },
+  showSingleMonth: { type: Boolean, default: false },
+  disabledDates: { type: [Array, Boolean] as PropType<DateInput[] | false>, default: false },
+  daysWithExtraText: { type: Array as PropType<DateInput[]>, default: () => [] },
+  enableCheckout: { type: Boolean, default: false },
+  weekDays: {
+    type: Array as PropType<string[]>,
+    default: () => ["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
+  },
+  monthNames: {
+    type: Array as PropType<string[]>,
+    default: () => ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
+  },
+  getValues: { type: Function as PropType<() => unknown>, default: undefined },
+  extraDayText: { type: Function as PropType<(day: CalendarDay) => string>, default: undefined },
+  i18n: { type: Object as PropType<Partial<I18nDictionary>>, default: () => ({}) },
+  mobileMonths: { type: Number, default: 12 },
+});
 
-const windowWidthChanged = () => {
-    datePickerObject.value.showSingleMonth = isSingleMonth();
+const emit = defineEmits<{
+  selected: [payload: { start: number; end: number }];
+  select: [payload: { start: number; end: number }];
+  change: [payload: { start: string | false; end: string | false }];
+  "update:startDate": [value: string | false];
+  "update:endDate": [value: string | false];
+}>();
+
+defineSlots<{
+  popup?: (props: { nights: number; error: boolean }) => unknown;
+  month?: (props: { month: CalendarMonth }) => unknown;
+  weekday?: (props: { weekday: string }) => unknown;
+  day?: (props: { day: CalendarDay }) => unknown;
+  next?: () => unknown;
+  prev?: () => unknown;
+}>();
+
+const root = ref<HTMLElement | null>(null);
+const instanceId = `h-datepicker-${getCurrentInstance()?.uid ?? "standalone"}`;
+const monthElements = ref<HTMLElement[]>([]);
+const isMobileLayout = ref(false);
+const selectedStart = ref<Date | null>(null);
+const selectedEnd = ref<Date | null>(null);
+const hoveredDate = ref<Date | null>(null);
+const focusedDayKey = ref("");
+const selectionError = ref("");
+const viewStart = ref(startOfMonth(new Date()));
+const popup = ref({ show: false, top: 0, left: 0, width: 0, count: 0, error: false });
+
+const messages = computed<I18nDictionary>(() => ({
+  ...DEFAULT_I18N,
+  "day-names-short": props.weekDays,
+  "month-names": props.monthNames,
+  ...props.i18n,
+} as I18nDictionary));
+const i18nSettings = computed<fecha.I18nSettingsOptional>(() => ({
+  dayNamesShort: langArray("day-names-short", 7) as fecha.Days,
+  dayNames: langArray("day-names", 7) as fecha.Days,
+  monthNamesShort: langArray("month-names-short", 12) as fecha.Months,
+  monthNames: langArray("month-names", 12) as fecha.Months,
+}));
+
+const minDateValue = computed(() => normalizeDate(props.minDate) ?? normalizeDate(new Date())!);
+const maxDateValue = computed(() => normalizeDate(props.maxDate));
+const disabledDateKeys = computed(() => toDateKeySet(props.disabledDates || []));
+const noCheckInDateKeys = computed(() => toDateKeySet(props.noCheckInDates));
+const noCheckOutDateKeys = computed(() => toDateKeySet(props.noCheckOutDates));
+const extraTextDateKeys = computed(() => toDateKeySet(props.daysWithExtraText));
+const todayKey = computed(() => dateKey(normalizeDate(new Date())!));
+const selectedNights = computed(() => selectedStart.value && selectedEnd.value
+  ? calendarDayDifference(selectedStart.value, selectedEnd.value)
+  : 0);
+const mobileMonthCount = computed(() => Math.min(24, Math.max(2, Math.trunc(props.mobileMonths) || 12)));
+const renderedMonthCount = computed(() => {
+  if (props.showSingleMonth) return 1;
+  if (isMobileLayout.value) {
+    const maximum = maxDateValue.value;
+    return maximum
+      ? Math.max(1, Math.min(mobileMonthCount.value, monthDifference(viewStart.value, maximum) + 1))
+      : mobileMonthCount.value;
+  }
+  const desktopCount = props.showSingleMonth ? 1 : 2;
+  const maximum = maxDateValue.value;
+  return maximum ? Math.max(1, Math.min(desktopCount, monthDifference(viewStart.value, maximum) + 1)) : desktopCount;
+});
+const calendarMonths = computed<CalendarMonth[]>(() => Array.from(
+  { length: renderedMonthCount.value },
+  (_, index) => buildMonth(addCalendarMonths(viewStart.value, index), index),
+));
+const canMoveToPreviousMonth = computed(() => endOfMonth(addCalendarMonths(viewStart.value, -1)).getTime() >= minDateValue.value.getTime());
+const canMoveToNextMonth = computed(() => {
+  const maximum = maxDateValue.value;
+  return !maximum || addCalendarMonths(viewStart.value, 1).getTime() <= startOfMonth(maximum).getTime();
+});
+const topbarText = computed(() => {
+  if (selectionError.value) return selectionError.value;
+  if (selectedStart.value && selectedEnd.value) {
+    const unit = selectedNights.value === 1 ? lang("night") : lang("nights");
+    return `${lang("selected")} ${formatDate(selectedStart.value)}${props.separator}${formatDate(selectedEnd.value)} · ${selectedNights.value} ${unit}`;
+  }
+  if (selectedStart.value) return validationMessage("select-checkout");
+  return lang("info-default");
+});
+
+function lang(key: string): string {
+  const value = messages.value[key];
+  return typeof value === "string" ? value : "";
 }
 
-watch(() => datePickerObject.value.showSingleMonth, () => {
-    disableNextPrevButtons();
-})
-
-const isSSR = () => {
-    return typeof client !== 'undefined';
+function langArray(key: string, expectedLength: number): string[] {
+  const value = messages.value[key];
+  const fallback = DEFAULT_I18N[key];
+  if (Array.isArray(value) && value.length === expectedLength) return value;
+  return Array.isArray(fallback) ? fallback : [];
 }
 
-onUnmounted(() => {
-    window.removeEventListener('resize', () => windowWidthChanged());
-})
+function replaceToken(template: string, value: string | number, token = "%s"): string {
+  return template.replace(token, String(value));
+}
 
-const loaded = ref(false);
+function normalizeDate(input: DateInput, inputFormat = props.format): Date | null {
+  if (input === false || input === null || input === undefined || input === "") return null;
+  let result: Date | null;
+  if (input instanceof Date) result = new Date(input.getTime());
+  else if (typeof input === "number") result = new Date(input);
+  else result = fecha.parse(input, inputFormat, i18nSettings.value) ?? fecha.parse(input, "YYYY-MM-DD", i18nSettings.value);
+  if (!result || Number.isNaN(result.getTime())) return null;
+  return new Date(result.getFullYear(), result.getMonth(), result.getDate(), 12);
+}
 
+function formatDate(input: DateInput, mask = props.format): string {
+  const date = normalizeDate(input);
+  return date ? fecha.format(date, mask, i18nSettings.value) : "";
+}
+
+function dateKey(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+function toDateKeySet(values: DateInput[]): Set<string> {
+  return new Set(values
+    .map((value) => normalizeDate(value))
+    .filter((value): value is Date => Boolean(value))
+    .map(dateKey));
+}
+
+function startOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), 1, 12);
+}
+
+function endOfMonth(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 12);
+}
+
+function addCalendarDays(date: Date, amount: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + amount, 12);
+}
+
+function addCalendarMonths(date: Date, amount: number): Date {
+  return new Date(date.getFullYear(), date.getMonth() + amount, 1, 12);
+}
+
+function monthDifference(first: Date, second: Date): number {
+  return (second.getFullYear() - first.getFullYear()) * 12 + second.getMonth() - first.getMonth();
+}
+
+function calendarOrdinal(date: Date): number {
+  return Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86_400_000);
+}
+
+function calendarDayDifference(first: Date, second: Date): number {
+  return Math.abs(calendarOrdinal(second) - calendarOrdinal(first));
+}
+
+function compareDates(first: Date, second: Date): number {
+  return calendarOrdinal(first) - calendarOrdinal(second);
+}
+
+function isWithinBounds(date: Date): boolean {
+  if (compareDates(date, minDateValue.value) < 0) return false;
+  const maximum = maxDateValue.value;
+  return !maximum || compareDates(date, maximum) <= 0;
+}
+
+function matchesWeekdayRule(date: Date, rules: string[]): boolean {
+  const index = date.getDay();
+  const candidates = [
+    langArray("day-names-short", 7)[index],
+    langArray("day-names", 7)[index],
+    (DEFAULT_I18N["day-names-short"] as string[])[index],
+    (DEFAULT_I18N["day-names"] as string[])[index],
+  ].map((value) => value.toLocaleLowerCase());
+  return rules.some((rule) => candidates.includes(String(rule).toLocaleLowerCase()));
+}
+
+function isHardBlocked(date: Date): boolean {
+  return disabledDateKeys.value.has(dateKey(date)) || matchesWeekdayRule(date, props.disabledDaysOfWeek);
+}
+
+function isCheckInBlocked(date: Date): boolean {
+  return isHardBlocked(date)
+    || noCheckInDateKeys.value.has(dateKey(date))
+    || matchesWeekdayRule(date, props.noCheckInDaysOfWeek);
+}
+
+function isCheckOutBlocked(date: Date): boolean {
+  return noCheckOutDateKeys.value.has(dateKey(date))
+    || matchesWeekdayRule(date, props.noCheckOutDaysOfWeek);
+}
+
+function canSelectCheckIn(date: Date): boolean {
+  return isWithinBounds(date) && !isCheckInBlocked(date);
+}
+
+function rangeError(first: Date, second: Date): string {
+  const start = compareDates(first, second) <= 0 ? first : second;
+  const end = start === first ? second : first;
+  if (!canSelectCheckIn(start) || !isWithinBounds(end)) return validationMessage("unavailable");
+  if (props.selectForward && compareDates(second, first) < 0) return validationMessage("forward-only");
+  if (isCheckOutBlocked(end)) return validationMessage("checkout-disabled");
+
+  const nights = calendarDayDifference(start, end);
+  if (nights === 0) return validationMessage("same-day");
+  if (nights < Math.max(1, props.minNights)) return validationMessage("min", props.minNights);
+  if (props.maxNights > 0 && nights > props.maxNights) return validationMessage("max", props.maxNights);
+  if (props.minNightsMultiple && nights % Math.max(1, props.minNights) !== 0) return validationMessage("multiple", props.minNights);
+
+  for (let cursor = addCalendarDays(start, 1); compareDates(cursor, end) <= 0; cursor = addCalendarDays(cursor, 1)) {
+    if (!isHardBlocked(cursor)) continue;
+    if (!(props.enableCheckout && compareDates(cursor, end) === 0)) return validationMessage("unavailable");
+  }
+  return "";
+}
+
+function validationMessage(type: string, value?: number): string {
+  if (type === "min") return replaceToken(value === 1 ? lang("error-less") : lang("error-less-plural"), value ?? 1, "%d");
+  if (type === "max") return replaceToken(value === 1 ? lang("error-more") : lang("error-more-plural"), value ?? 1, "%d");
+  if (type === "checkout-disabled") return lang("checkout-disabled");
+  if (type === "select-checkout") return lang("select-checkout");
+  if (type === "forward-only") return lang("forward-only");
+  if (type === "same-day") return lang("same-day");
+  if (type === "multiple") return replaceToken(lang("multiple"), value ?? 1, "%d");
+  return lang("unavailable");
+}
+
+function isSelectableNow(date: Date): boolean {
+  return selectedStart.value && !selectedEnd.value ? rangeError(selectedStart.value, date) === "" : canSelectCheckIn(date);
+}
+
+function isBetween(date: Date, first: Date, second: Date): boolean {
+  const lower = Math.min(calendarOrdinal(first), calendarOrdinal(second));
+  const upper = Math.max(calendarOrdinal(first), calendarOrdinal(second));
+  const current = calendarOrdinal(date);
+  return current >= lower && current <= upper;
+}
+
+function buildMonth(monthDate: Date, index: number): CalendarMonth {
+  const firstDay = startOfMonth(monthDate);
+  const leadingDays = props.startOfWeek === "monday" ? (firstDay.getDay() + 6) % 7 : firstDay.getDay();
+  const gridStart = addCalendarDays(firstDay, -leadingDays);
+  return {
+    name: langArray("month-names", 12)[monthDate.getMonth()] ?? "",
+    month: monthDate.getMonth(),
+    year: monthDate.getFullYear(),
+    id: `${monthDate.getFullYear()}-${monthDate.getMonth() + 1}`,
+    days: Array.from({ length: 42 }, (_, dayIndex) => buildDay(addCalendarDays(gridStart, dayIndex), monthDate)),
+    prevBtn: isMobileLayout.value
+      ? index > 0 || canMoveToPreviousMonth.value
+      : index === 0 && canMoveToPreviousMonth.value,
+    nextBtn: isMobileLayout.value
+      ? index < renderedMonthCount.value - 1 || canMoveToNextMonth.value
+      : index === renderedMonthCount.value - 1 && canMoveToNextMonth.value,
+  };
+}
+
+function buildDay(date: Date, visibleMonth: Date): CalendarDay {
+  const currentMonth = date.getMonth() === visibleMonth.getMonth() && date.getFullYear() === visibleMonth.getFullYear();
+  const key = dateKey(date);
+  const hardBlocked = isHardBlocked(date);
+  const isCheckoutEnabled = Boolean(selectedStart.value && !selectedEnd.value && hardBlocked && rangeError(selectedStart.value, date) === "");
+  const selected = Boolean(currentMonth && selectedStart.value && selectedEnd.value && isBetween(date, selectedStart.value, selectedEnd.value));
+  const hovering = Boolean(currentMonth && selectedStart.value && !selectedEnd.value && hoveredDate.value && isBetween(date, selectedStart.value, hoveredDate.value));
+  const type: CalendarDay["type"] = currentMonth ? "visibleMonth" : compareDates(date, visibleMonth) < 0 ? "lastMonth" : "nextMonth";
+  return {
+    date,
+    type,
+    day: date.getDate(),
+    time: date.getTime(),
+    tabindex: focusedDayKey.value === key ? 0 : -1,
+    attributes: [],
+    isCurrentMonth: currentMonth,
+    isValid: currentMonth && isSelectableNow(date),
+    isNoCheckIn: isCheckInBlocked(date),
+    isNoCheckOut: isCheckOutBlocked(date),
+    isToday: key === todayKey.value,
+    isDisabled: hardBlocked,
+    disabled: hardBlocked,
+    isCheckOutEnabled: isCheckoutEnabled,
+    isDayBeforeDisabledDate: isHardBlocked(addCalendarDays(date, 1)),
+    isCheckInOnly: canSelectCheckIn(date) && isCheckOutBlocked(date),
+    isDayWithExtraText: extraTextDateKeys.value.has(key),
+    isFirstDaySelected: key === (selectedStart.value ? dateKey(selectedStart.value) : ""),
+    isLastDaySelected: key === (selectedEnd.value ? dateKey(selectedEnd.value) : ""),
+    isSelected: selected,
+    isHovering: hovering,
+    isTmpValid: true,
+    isTmp: false,
+  };
+}
+
+function getWeekDayNames(): string[] {
+  const days = langArray("day-names-short", 7);
+  return props.startOfWeek === "monday" ? [...days.slice(1), days[0]] : days;
+}
+
+function dayAriaLabel(day: CalendarDay): string {
+  const formatted = formatDate(day.date, props.ariaDayFormat);
+  if (day.isFirstDaySelected) return replaceToken(lang("aria-selected-checkin"), formatted);
+  if (day.isLastDaySelected) return replaceToken(lang("aria-selected-checkout"), formatted);
+  if (day.isSelected) return replaceToken(lang("aria-selected"), formatted);
+  if (!day.isValid) return replaceToken(lang("aria-disabled"), formatted);
+  return replaceToken(lang(selectedStart.value && !selectedEnd.value ? "aria-choose-checkout" : "aria-choose-checkin"), formatted);
+}
+
+function selectDay(day: CalendarDay): void {
+  if (!day.isCurrentMonth) return;
+  const date = normalizeDate(day.date)!;
+  if (!selectedStart.value || selectedEnd.value) {
+    if (!canSelectCheckIn(date)) return;
+    selectedStart.value = date;
+    selectedEnd.value = null;
+    selectionError.value = "";
+    focusedDayKey.value = dateKey(date);
+    emitSelectionChange();
+    return;
+  }
+  const error = rangeError(selectedStart.value, date);
+  if (error) {
+    selectionError.value = error;
+    return;
+  }
+  const start = compareDates(selectedStart.value, date) <= 0 ? selectedStart.value : date;
+  const end = start === selectedStart.value ? date : selectedStart.value;
+  selectedStart.value = normalizeDate(start)!;
+  selectedEnd.value = normalizeDate(end)!;
+  focusedDayKey.value = dateKey(date);
+  selectionError.value = "";
+  hoveredDate.value = null;
+  hidePopover();
+  const payload = { start: selectedStart.value.getTime(), end: selectedEnd.value.getTime() };
+  emit("selected", payload);
+  emit("select", payload);
+  emitSelectionChange();
+}
+
+function emitSelectionChange(): void {
+  const startValue = selectedStart.value ? formatDate(selectedStart.value) : false;
+  const endValue = selectedEnd.value ? formatDate(selectedEnd.value) : false;
+  emit("update:startDate", startValue);
+  emit("update:endDate", endValue);
+  emit("change", { start: startValue, end: endValue });
+}
+
+function clearSelection(): void {
+  selectedStart.value = null;
+  selectedEnd.value = null;
+  hoveredDate.value = null;
+  selectionError.value = "";
+  emitSelectionChange();
+}
+
+function showPopover(event: PointerEvent, day: CalendarDay): void {
+  if (isMobileLayout.value || !selectedStart.value || selectedEnd.value || !day.isCurrentMonth) return;
+  hoveredDate.value = normalizeDate(day.date);
+  const parentRect = root.value?.getBoundingClientRect();
+  const target = event.currentTarget as HTMLElement | null;
+  if (!parentRect || !target) return;
+  const childRect = target.getBoundingClientRect();
+  popup.value = {
+    show: true,
+    top: childRect.top - parentRect.top - 40,
+    left: childRect.left - parentRect.left,
+    width: childRect.width,
+    count: calendarDayDifference(selectedStart.value, day.date),
+    error: rangeError(selectedStart.value, day.date) !== "",
+  };
+}
+
+function hidePopover(): void {
+  hoveredDate.value = null;
+  popup.value.show = false;
+}
+
+async function goToPreviousMonth(index: number): Promise<void> {
+  if (isMobileLayout.value && index > 0) return scrollToMonth(index - 1);
+  if (!canMoveToPreviousMonth.value) return;
+  viewStart.value = addCalendarMonths(viewStart.value, -1);
+  await nextTick();
+  if (isMobileLayout.value) scrollToMonth(0);
+}
+
+async function goToNextMonth(index: number): Promise<void> {
+  if (isMobileLayout.value && index < calendarMonths.value.length - 1) return scrollToMonth(index + 1);
+  if (!canMoveToNextMonth.value) return;
+  viewStart.value = addCalendarMonths(viewStart.value, 1);
+  await nextTick();
+  if (isMobileLayout.value) scrollToMonth(Math.min(index, calendarMonths.value.length - 1));
+}
+
+function scrollToMonth(index: number): void {
+  monthElements.value[index]?.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" });
+}
+
+function prefersReducedMotion(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function setMonthElement(element: unknown, index: number): void {
+  if (element instanceof HTMLElement) monthElements.value[index] = element;
+}
+
+async function handleDayKeydown(event: KeyboardEvent, day: CalendarDay): Promise<void> {
+  if (event.key === "Enter" || event.key === " " || event.key === "Spacebar") {
+    event.preventDefault();
+    selectDay(day);
+    return;
+  }
+  let target: Date | null = null;
+  const weekOffset = props.startOfWeek === "monday" ? (day.date.getDay() + 6) % 7 : day.date.getDay();
+  if (event.key === "ArrowRight") target = addCalendarDays(day.date, 1);
+  if (event.key === "ArrowLeft") target = addCalendarDays(day.date, -1);
+  if (event.key === "ArrowDown") target = addCalendarDays(day.date, 7);
+  if (event.key === "ArrowUp") target = addCalendarDays(day.date, -7);
+  if (event.key === "Home") target = addCalendarDays(day.date, -weekOffset);
+  if (event.key === "End") target = addCalendarDays(day.date, 6 - weekOffset);
+  if (event.key === "PageUp") target = preserveDayInMonth(day.date, -1);
+  if (event.key === "PageDown") target = preserveDayInMonth(day.date, 1);
+  if (!target) return;
+  event.preventDefault();
+  await focusDate(target);
+}
+
+function preserveDayInMonth(date: Date, monthDelta: number): Date {
+  const targetMonth = addCalendarMonths(date, monthDelta);
+  return new Date(targetMonth.getFullYear(), targetMonth.getMonth(), Math.min(date.getDate(), endOfMonth(targetMonth).getDate()), 12);
+}
+
+async function focusDate(date: Date): Promise<void> {
+  if (!isWithinBounds(date)) return;
+  const lastMonth = addCalendarMonths(viewStart.value, renderedMonthCount.value - 1);
+  if (monthDifference(viewStart.value, date) < 0 || monthDifference(date, lastMonth) < 0) viewStart.value = startOfMonth(date);
+  focusedDayKey.value = dateKey(date);
+  await nextTick();
+  root.value?.querySelector<HTMLElement>(`[data-date="${dateKey(date)}"]`)?.focus();
+}
+
+function syncSelectionFromProps(): void {
+  const values = Array.isArray(props.selectedDates) ? props.selectedDates : [];
+  const first = normalizeDate(props.startDate || values[0]);
+  const second = normalizeDate(props.endDate || values[1]);
+  selectedStart.value = first;
+  selectedEnd.value = first && second ? second : null;
+  if (first && second && compareDates(first, second) > 0) {
+    selectedStart.value = second;
+    selectedEnd.value = first;
+  }
+  const anchor = selectedStart.value && isWithinBounds(selectedStart.value) ? selectedStart.value : minDateValue.value;
+  viewStart.value = startOfMonth(anchor);
+  focusedDayKey.value = dateKey(anchor);
+  selectionError.value = "";
+}
+
+function updateResponsiveLayout(): void {
+  if (typeof window === "undefined") return;
+  const configuredBreakpoint = Number(props.singleMonthBreakpoint);
+  const breakpoint = props.singleMonthBreakpoint === false || !Number.isFinite(configuredBreakpoint)
+    ? 768
+    : Math.max(320, configuredBreakpoint);
+  const componentWidth = root.value?.clientWidth || window.innerWidth;
+  isMobileLayout.value = Math.min(componentWidth, window.innerWidth) < breakpoint;
+}
+
+let resizeObserver: ResizeObserver | null = null;
+
+watch(
+  () => [props.startDate, props.endDate, props.selectedDates, props.minDate, props.maxDate, props.format] as const,
+  syncSelectionFromProps,
+  { deep: true, immediate: true },
+);
+watch(() => props.singleMonthBreakpoint, updateResponsiveLayout);
+onBeforeUpdate(() => { monthElements.value = []; });
 onMounted(() => {
-    window.addEventListener('resize', () => windowWidthChanged());
-    windowWidthChanged()
-    disableNextPrevButtons();
-    loaded.value = true;
-})
+  updateResponsiveLayout();
+  if (typeof ResizeObserver !== "undefined" && root.value) {
+    resizeObserver = new ResizeObserver(updateResponsiveLayout);
+    resizeObserver.observe(root.value);
+  } else {
+    window.addEventListener("resize", updateResponsiveLayout, { passive: true });
+  }
+});
+onUnmounted(() => {
+  resizeObserver?.disconnect();
+  window.removeEventListener("resize", updateResponsiveLayout);
+});
 
-init();
-
+defineExpose({
+  clear: clearSelection,
+  getValues: () => ({
+    start: selectedStart.value ? formatDate(selectedStart.value) : false,
+    end: selectedEnd.value ? formatDate(selectedEnd.value) : false,
+  }),
+  setRange: (start: DateInput, end: DateInput) => {
+    const nextStart = normalizeDate(start);
+    const nextEnd = normalizeDate(end);
+    if (!nextStart || !nextEnd) return false;
+    const error = rangeError(nextStart, nextEnd);
+    if (error) {
+      selectionError.value = error;
+      return false;
+    }
+    selectedStart.value = compareDates(nextStart, nextEnd) <= 0 ? nextStart : nextEnd;
+    selectedEnd.value = compareDates(nextStart, nextEnd) <= 0 ? nextEnd : nextStart;
+    viewStart.value = startOfMonth(selectedStart.value);
+    emitSelectionChange();
+    return true;
+  },
+});
 </script>
 
 <template>
-    <div class="h_datepicker" ref="parent">
-        <div
-            :class="{'h_datepicker_invisible': !popup.show, 'visible': popup.show}"
-            class="h_datepicker_popup"
-            :style="{ top: popup.top + 'px', left: popup.left + 'px', width: popup.width  + 'px' }
-">
-            <div style="pointer-events: none;">
-                <slot name="popup" :nights="popup.count">
-                    {{
-                        popup.count ? popup.count + ' ' + (popup.count > 1 ? lang('nights') : lang('night')) : lang('not selected')
-                    }}
-                </slot>
-            </div>
-        </div>
-        <div
-            v-for="(month, index) in datePickerObject.months"
-            :key="month.id"
-            class="h_datepicker_month"
-            :class="{
-          'h_datepicker_hidden': index === 1 && datePickerObject.showSingleMonth,
-          'h_datepicker_two_month_display': !datePickerObject.showSingleMonth,
-          'h_datepicker_one_month_display': datePickerObject.showSingleMonth,
+  <section
+    ref="root"
+    class="h-datepicker h_datepicker"
+    :class="{
+      'h-datepicker--mobile': isMobileLayout,
+      'h_datepicker_mobile': isMobileLayout,
+      'h-datepicker--topbar-bottom': topbarPosition === 'bottom',
+    }"
+    :aria-label="lang('aria-application')"
+  >
+    <div
+      v-if="popup.show"
+      class="h-datepicker__popup h_datepicker_popup"
+      :class="{ 'h-datepicker__popup--error': popup.error }"
+      :style="{ top: `${popup.top}px`, left: `${popup.left}px`, width: `${popup.width}px` }"
+      role="status"
+    >
+      <slot name="popup" :nights="popup.count" :error="popup.error">
+        {{ popup.count }} {{ popup.count === 1 ? lang("night") : lang("nights") }}
+      </slot>
+    </div>
+
+    <div
+      v-if="showTopbar"
+      class="h-datepicker__topbar"
+      :class="{ 'h-datepicker__topbar--error': selectionError }"
+      aria-live="polite"
+    >
+      <span>{{ topbarText }}</span>
+      <button
+        v-if="selectedStart"
+        type="button"
+        class="h-datepicker__clear"
+        :aria-label="lang('aria-clear-button')"
+        @click="clearSelection"
+      >
+        {{ lang("clearButton") }}
+      </button>
+    </div>
+
+    <div class="h-datepicker__months h_datepicker_months" :aria-label="lang('aria-application')">
+      <article
+        v-for="(month, index) in calendarMonths"
+        :key="month.id"
+        :ref="(element) => setMonthElement(element, index)"
+        class="h-datepicker__month h_datepicker_month"
+        :class="{
+          'h_datepicker_one_month_display': calendarMonths.length === 1,
+          'h_datepicker_two_month_display': calendarMonths.length === 2,
           'h_datepicker_month-1': index === 0,
           'h_datepicker_month-2': index === 1,
         }"
-        >
-            <div class="h_datepicker_month_control_panel">
-                <div
-                    class="h_datepicker_month_control_item"
-                >
-                    <div @click="goToPreviousMonth(month, index)"
-                         class="h_datepicker_month_control_btn"
-                         v-if="loaded || !isSSR"
-                         :class="{ 'h_datepicker_invisible': !month.prevBtn }"
-                    >
-                        <slot name="prev"> <<</slot>
-                    </div>
-                </div>
-                <div class="h_datepicker_month_control_item">
-                    <slot name="month" :month="month">
-                        {{ month.name }} {{ month.year }}
-                    </slot>
-                </div>
-                <div
-                    class="h_datepicker_month_control_item"
-                >
-                    <div
-                        @click="goToNextMonth(month, index)"
-                        class="h_datepicker_month_control_btn"
-                        v-if="loaded || !isSSR"
-                        :class="{ 'h_datepicker_invisible': !month.nextBtn }"
-                    >
-                        <slot name="next"> >></slot>
-                    </div>
-                </div>
-            </div>
-            <div class="h_datepicker_month_box">
-                <div class="h_datepicker_weeks_container">
-                    <div
-                        class="h_datepicker_week_name"
-                        v-for="weekName in getWeekDayNames()"
-                    >
-                        <slot
-                            name="weekday"
-                            :weekday="weekName"
-                        >
-                            {{ weekName }}
-                        </slot>
-                    </div>
-                </div>
-                <div class="h_datepicker_dates_container">
-                    <div
-                        v-for="day in month.days"
-                        @click="dayClicked(day, index + 1)"
-                        @mouseout="hidePopover()"
-                        @mouseover="dayHovering(day, index + 1) || showPopover($event, day)"
-                        :class="{
-            'h_datepicker_notCurrentMonth': !day.isCurrentMonth,
-            'h_datepicker_valid': day.isValid,
-            'h_datepicker_invalid': !day.isValid,
-            'h_datepicker_tmp_invalid': !day.isTmpValid,
-            'h_datepicker_tmp_valid': day.isTmpValid,
-            'h_datepicker_disabled': day.isDisabled,
-            'h_datepicker_checkout_enabled': day.isCheckOutEnabled,
-            'h_datepicker_checkout_disabled': !day.isCheckOutEnabled,
-            'h_datepicker_checkin_enabled': !day.isNoCheckIn,
-            'h_datepicker_checkin_disabled': day.isNoCheckIn,
-            'h_datepicker_before_disabled_date': day.isDayBeforeDisabledDate,
-            'h_datepicker_first_day_selected': day.isFirstDaySelected,
-            'h_datepicker_last_day_selected': day.isLastDaySelected,
-            'h_datepicker_selected': day.isSelected,
-            'h_datepicker_hovering': day.isHovering,
-          }"
-                        class="h_datepicker_day"
-                    >
-                        <slot
-                            name="day"
-                            :day="day"
-                        >
-                            {{ day.day }}
-                        </slot>
-                    </div>
-                </div>
-            </div>
+        :aria-labelledby="`${instanceId}-month-${month.id}`"
+      >
+        <header class="h-datepicker__month-header h_datepicker_month_control_panel">
+          <button
+            type="button"
+            class="h-datepicker__month-control h_datepicker_month_control_btn"
+            :class="{ 'h-datepicker__month-control--hidden': !month.prevBtn }"
+            :disabled="!month.prevBtn"
+            :aria-label="lang('aria-prev-month')"
+            @click="goToPreviousMonth(index)"
+          >
+            <slot name="prev"><span aria-hidden="true">‹</span></slot>
+          </button>
+
+          <h2 :id="`${instanceId}-month-${month.id}`" class="h-datepicker__month-title h_datepicker_month_control_item" aria-live="polite">
+            <slot name="month" :month="month">{{ month.name }} {{ month.year }}</slot>
+          </h2>
+
+          <button
+            type="button"
+            class="h-datepicker__month-control h_datepicker_month_control_btn"
+            :class="{ 'h-datepicker__month-control--hidden': !month.nextBtn }"
+            :disabled="!month.nextBtn"
+            :aria-label="lang('aria-next-month')"
+            @click="goToNextMonth(index)"
+          >
+            <slot name="next"><span aria-hidden="true">›</span></slot>
+          </button>
+        </header>
+
+        <div class="h-datepicker__grid h_datepicker_month_box" role="grid" :aria-labelledby="`${instanceId}-month-${month.id}`">
+          <div
+            v-for="weekday in getWeekDayNames()"
+            :key="weekday"
+            class="h-datepicker__weekday h_datepicker_week_name"
+            role="columnheader"
+          >
+            <slot name="weekday" :weekday="weekday">{{ weekday }}</slot>
+          </div>
+
+          <div
+            v-for="day in month.days"
+            :key="`${month.id}-${dateKey(day.date)}`"
+            class="h-datepicker__cell"
+            role="gridcell"
+            :aria-selected="day.isSelected"
+          >
+            <button
+              v-if="day.isCurrentMonth"
+              type="button"
+              class="h-datepicker__day h_datepicker_day"
+              :class="{
+                'h-datepicker__day--valid': day.isValid,
+                'h-datepicker__day--invalid': !day.isValid,
+                'h-datepicker__day--disabled': day.isDisabled && !day.isCheckOutEnabled,
+                'h-datepicker__day--checkout-enabled': day.isCheckOutEnabled,
+                'h-datepicker__day--selected': day.isSelected,
+                'h-datepicker__day--range-start': day.isFirstDaySelected,
+                'h-datepicker__day--range-end': day.isLastDaySelected,
+                'h-datepicker__day--hovering': day.isHovering,
+                'h-datepicker__day--today': day.isToday,
+                'h_datepicker_valid': day.isValid,
+                'h_datepicker_invalid': !day.isValid,
+                'h_datepicker_disabled': day.isDisabled,
+                'h_datepicker_checkout_enabled': day.isCheckOutEnabled,
+                'h_datepicker_checkout_disabled': !day.isCheckOutEnabled,
+                'h_datepicker_checkin_enabled': !day.isNoCheckIn,
+                'h_datepicker_checkin_disabled': day.isNoCheckIn,
+                'h_datepicker_before_disabled_date': day.isDayBeforeDisabledDate,
+                'h_datepicker_first_day_selected': day.isFirstDaySelected,
+                'h_datepicker_last_day_selected': day.isLastDaySelected,
+                'h_datepicker_selected': day.isSelected,
+                'h_datepicker_hovering': day.isHovering,
+              }"
+              :aria-disabled="!day.isValid"
+              :tabindex="day.tabindex"
+              :data-date="dateKey(day.date)"
+              :aria-label="dayAriaLabel(day)"
+              @click="selectDay(day)"
+              @keydown="handleDayKeydown($event, day)"
+              @pointerenter="showPopover($event, day)"
+              @pointerleave="hidePopover"
+            >
+              <slot name="day" :day="day">
+                <span>{{ day.day }}</span>
+                <small v-if="day.isDayWithExtraText && extraDayText" class="h-datepicker__extra-text">
+                  {{ extraDayText(day) }}
+                </small>
+              </slot>
+            </button>
+            <span v-else class="h-datepicker__day-placeholder" aria-hidden="true" />
+          </div>
         </div>
+      </article>
     </div>
+  </section>
 </template>
 
 <style scoped>
-.h_datepicker {
-    user-select: none;
-    display: flex;
-    justify-content: space-between;
-    max-width: 1000px;
-    max-height: 600px;
-    height: 500px;
-    position: relative;
-    overflow: hidden;
+.h-datepicker,
+.h-datepicker * {
+  box-sizing: border-box;
 }
 
-.h_datepicker_invisible {
-    visibility: hidden;
+.h-datepicker {
+  --h-datepicker-accent: #0b6bcb;
+  --h-datepicker-accent-strong: #084c8d;
+  --h-datepicker-range: #dceeff;
+  --h-datepicker-text: #172033;
+  --h-datepicker-muted: #7c879c;
+  --h-datepicker-border: #dce2ea;
+  --h-datepicker-danger: #b42318;
+  color: var(--h-datepicker-text);
+  font-family: inherit;
+  max-width: 1000px;
+  min-width: 0;
+  position: relative;
+  width: 100%;
 }
 
-.h_datepicker_popup {
-    color: #fff;
-    text-align: center;
-    position: absolute;
-    pointer-events: none;
-    border-radius: 8px;
-    font-size: 11px;
-    background-color: rgb(11 37 60);
-    padding: 0.5rem;
-    box-sizing: border-box;
-    z-index: 100;
+.h-datepicker__months {
+  display: grid;
+  gap: clamp(1rem, 3vw, 2.5rem);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+  padding: clamp(0.75rem, 2vw, 1.5rem);
 }
 
-.h_datepicker_dates_container, .h_datepicker_weeks_container {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    align-content: flex-start;
-    width: 100%;
+.h-datepicker__month { min-width: 0; }
+
+.h-datepicker__month-header {
+  align-items: center;
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
+  margin-bottom: 0.75rem;
 }
 
-.h_datepicker_weeks_container {
-    height: 15%;
+.h-datepicker__month-title {
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
+  text-align: center;
 }
 
-.h_datepicker_dates_container {
-    height: 85%;
+.h-datepicker__month-control,
+.h-datepicker__clear,
+.h-datepicker__day {
+  appearance: none;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  margin: 0;
 }
 
-.h_datepicker_month {
-    min-width: 320px;
+.h-datepicker__month-control {
+  align-items: center;
+  border: 1px solid var(--h-datepicker-border);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1.75rem;
+  height: 2.75rem;
+  justify-content: center;
+  padding: 0;
+  transition: background-color 160ms ease, border-color 160ms ease;
+  width: 2.75rem;
 }
 
-.h_datepicker_one_month_display {
-    width: 100%;
+.h-datepicker__month-control:hover:not(:disabled) {
+  background: #f2f6fa;
+  border-color: #b8c3d1;
 }
 
-.h_datepicker_two_month_display {
-    width: 45%;
+.h-datepicker__month-control--hidden { visibility: hidden; }
+
+.h-datepicker__grid {
+  display: grid;
+  gap: 0.25rem;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
 }
 
-.h_datepicker_month_control_panel {
-    display: flex;
-    width: 100%;
-    height: 14%;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1%;
+.h-datepicker__weekday {
+  align-items: center;
+  color: var(--h-datepicker-muted);
+  display: flex;
+  font-size: 0.75rem;
+  font-weight: 700;
+  justify-content: center;
+  min-height: 2rem;
+  overflow: hidden;
+  text-transform: uppercase;
 }
 
-.h_datepicker_hidden {
-    display: none;
+.h-datepicker__cell { min-width: 0; }
+
+.h-datepicker__day,
+.h-datepicker__day-placeholder {
+  align-items: center;
+  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  height: clamp(2.75rem, 7vw, 4.25rem);
+  justify-content: center;
+  min-width: 0;
+  position: relative;
+  width: 100%;
 }
 
-.h_datepicker_month_control_item {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-weight: 700;
-    font-size: 1.5rem;
-    line-height: 2rem;
-    white-space: nowrap;
-    text-align: center;
+.h-datepicker__day { transition: background-color 140ms ease, color 140ms ease, box-shadow 140ms ease; }
+.h-datepicker__day--valid { cursor: pointer; }
+.h-datepicker__day--valid:hover,
+.h-datepicker__day--valid:focus-visible {
+  background: #edf5fc;
+  box-shadow: inset 0 0 0 2px var(--h-datepicker-accent);
+  outline: none;
+}
+.h-datepicker__day--invalid { color: #a9b1bf; cursor: not-allowed; }
+.h-datepicker__day--disabled { background: #fff0ee; color: #c77b72; text-decoration: line-through; }
+.h-datepicker__day--selected,
+.h-datepicker__day--hovering { background: var(--h-datepicker-range); border-radius: 0; color: var(--h-datepicker-text); }
+.h-datepicker__day--range-start,
+.h-datepicker__day--range-end { background: var(--h-datepicker-accent-strong); border-radius: 0.75rem; color: #fff; }
+.h-datepicker__day--range-start:focus-visible,
+.h-datepicker__day--range-end:focus-visible {
+  background: var(--h-datepicker-accent-strong);
+  box-shadow: inset 0 0 0 2px #fff, 0 0 0 2px var(--h-datepicker-accent);
+}
+.h-datepicker__day--checkout-enabled { background: #e7f5ec; color: #176c3a; text-decoration: none; }
+.h-datepicker__day--today::after {
+  background: currentColor;
+  border-radius: 50%;
+  bottom: 0.35rem;
+  content: "";
+  height: 0.25rem;
+  position: absolute;
+  width: 0.25rem;
 }
 
-.h_datepicker_month_control_btn {
-    cursor: pointer;
+.h-datepicker__extra-text {
+  display: block;
+  font-size: 0.65rem;
+  line-height: 1;
+  margin-top: 0.15rem;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.h_datepicker_week_name {
-    width: 13%;
-    border-radius: 20px;
-    height: 100%;
-    margin-bottom: 5px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
+.h-datepicker__popup {
+  background: #0b253c;
+  border-radius: 0.5rem;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 0.45rem;
+  pointer-events: none;
+  position: absolute;
+  text-align: center;
+  z-index: 5;
+}
+.h-datepicker__popup--error { background: var(--h-datepicker-danger); }
+
+.h-datepicker__topbar {
+  align-items: center;
+  background: #f7f9fc;
+  border: 1px solid var(--h-datepicker-border);
+  border-radius: 0.75rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin: 0 clamp(0.75rem, 2vw, 1.5rem);
+  padding: 0.75rem 1rem;
+}
+.h-datepicker__topbar--error { color: var(--h-datepicker-danger); }
+.h-datepicker__clear { color: var(--h-datepicker-accent-strong); cursor: pointer; font-weight: 700; padding: 0.4rem; }
+.h-datepicker--topbar-bottom { display: flex; flex-direction: column; }
+.h-datepicker--topbar-bottom .h-datepicker__topbar { order: 2; }
+
+.h-datepicker--mobile .h-datepicker__months {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: min(44rem, calc(100dvh - 1rem));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  padding: 0;
+  scroll-behavior: smooth;
+  scroll-padding-block: 0;
+  scroll-snap-type: y proximity;
+  scrollbar-gutter: stable;
+  touch-action: pan-y;
 }
 
-.h_datepicker_month_box {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    width: 100%;
-    height: 85%;
-    text-transform: uppercase;
-    font-weight: 400;
+.h-datepicker--mobile .h-datepicker__month {
+  flex: 0 0 auto;
+  padding: 1rem clamp(0.5rem, 3vw, 1rem);
+  scroll-snap-align: start;
+  scroll-snap-stop: normal;
 }
 
-.h_datepicker_day {
-    color: #333;
-    text-align: center;
-    width: 13%;
-    border-radius: 20px;
-    height: 15%;
-    margin-bottom: 1%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-sizing: border-box;
+.h-datepicker--mobile .h-datepicker__month-header {
+  background: #fff;
+  background: color-mix(in srgb, Canvas 94%, transparent);
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-.h_datepicker_notCurrentMonth {
-    opacity: 0;
-    cursor: default !important;
+.h-datepicker--mobile .h-datepicker__day,
+.h-datepicker--mobile .h-datepicker__day-placeholder { height: clamp(2.75rem, 13vw, 3.75rem); }
+
+@media (prefers-reduced-motion: reduce) {
+  .h-datepicker *,
+  .h-datepicker__months {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-.h_datepicker_valid {
-    cursor: pointer;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    user-select: none;
-}
-
-.h_datepicker_invalid {
-    color: #e8ebf4;
-}
-
-.h_datepicker_last_day_selected, .h_datepicker_first_day_selected {
-    color: #fff;
-    background-color: #005172 !important;
-}
-
-.h_datepicker_hovering {
-    color: #fff;
-    background-color: #008ebd;
-}
-
-.h_datepicker_selected {
-    color: #fff;
-    background-color: rgb(31, 197, 255);
-}
-
-.h_datepicker_disabled {
-    background-color: #fcb2be;
-}
-
-@media (max-width: 768px) {
-    .h_datepicker_month-2 {
-        display: none !important;
-    }
-
-    .h_datepicker_month {
-        width: 100%;
-    }
-
-    .h_datepicker_day {
-        height: 65px;
-    }
+@media (max-width: 420px) {
+  .h-datepicker__grid { gap: 0.125rem; }
+  .h-datepicker__weekday { font-size: 0.68rem; }
 }
 </style>

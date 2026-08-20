@@ -1,831 +1,1049 @@
-import { ref as d, computed as ft, reactive as ct, watch as ht, onUnmounted as dt, onMounted as vt, openBlock as B, createElementBlock as H, createElementVNode as V, normalizeClass as X, normalizeStyle as mt, renderSlot as G, createTextVNode as q, toDisplayString as ee, Fragment as ge, renderList as pe, createCommentVNode as Be } from "vue";
-var $e = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|Z|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g, A = "\\d\\d?", E = "\\d\\d", Dt = "\\d{3}", gt = "\\d{4}", te = "[^\\s]+", ze = /\[([^]*?)\]/gm;
-function Ze(a, r) {
-  for (var n = [], g = 0, u = a.length; g < u; g++)
-    n.push(a[g].substr(0, r));
-  return n;
+import { Fragment as e, computed as t, createCommentVNode as n, createElementBlock as r, createElementVNode as i, createTextVNode as a, defineComponent as o, getCurrentInstance as s, nextTick as c, normalizeClass as l, normalizeStyle as u, onBeforeUpdate as d, onMounted as ee, onUnmounted as te, openBlock as f, ref as p, renderList as m, renderSlot as h, toDisplayString as g, watch as ne } from "vue";
+//#region node_modules/fecha/lib/fecha.js
+var re = /d{1,4}|M{1,4}|YY(?:YY)?|S{1,3}|Do|ZZ|Z|([HhMsDm])\1?|[aA]|"[^"]*"|'[^']*'/g, _ = "\\d\\d?", v = "\\d\\d", y = "\\d{3}", b = "\\d{4}", x = "[^\\s]+", S = /\[([^]*?)\]/gm;
+function C(e, t) {
+	for (var n = [], r = 0, i = e.length; r < i; r++) n.push(e[r].substr(0, t));
+	return n;
 }
-var He = function(a) {
-  return function(r, n) {
-    var g = n[a].map(function(S) {
-      return S.toLowerCase();
-    }), u = g.indexOf(r.toLowerCase());
-    return u > -1 ? u : null;
-  };
+var w = function(e) {
+	return function(t, n) {
+		var r = n[e].map(function(e) {
+			return e.toLowerCase();
+		}).indexOf(t.toLowerCase());
+		return r > -1 ? r : null;
+	};
 };
-function L(a) {
-  for (var r = [], n = 1; n < arguments.length; n++)
-    r[n - 1] = arguments[n];
-  for (var g = 0, u = r; g < u.length; g++) {
-    var S = u[g];
-    for (var C in S)
-      a[C] = S[C];
-  }
-  return a;
+function T(e) {
+	for (var t = [...arguments].slice(1), n = 0, r = t; n < r.length; n++) {
+		var i = r[n];
+		for (var a in i) e[a] = i[a];
+	}
+	return e;
 }
-var Le = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday"
-], Re = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-], pt = Ze(Re, 3), Mt = Ze(Le, 3), Je = {
-  dayNamesShort: Mt,
-  dayNames: Le,
-  monthNamesShort: pt,
-  monthNames: Re,
-  amPm: ["am", "pm"],
-  DoFn: function(a) {
-    return a + ["th", "st", "nd", "rd"][a % 10 > 3 ? 0 : (a - a % 10 !== 10 ? 1 : 0) * a % 10];
-  }
-}, ie = L({}, Je), yt = function(a) {
-  return ie = L(ie, a);
-}, Ve = function(a) {
-  return a.replace(/[|\\{()[^$+*?.-]/g, "\\$&");
-}, Y = function(a, r) {
-  for (r === void 0 && (r = 2), a = String(a); a.length < r; )
-    a = "0" + a;
-  return a;
-}, kt = {
-  D: function(a) {
-    return String(a.getDate());
-  },
-  DD: function(a) {
-    return Y(a.getDate());
-  },
-  Do: function(a, r) {
-    return r.DoFn(a.getDate());
-  },
-  d: function(a) {
-    return String(a.getDay());
-  },
-  dd: function(a) {
-    return Y(a.getDay());
-  },
-  ddd: function(a, r) {
-    return r.dayNamesShort[a.getDay()];
-  },
-  dddd: function(a, r) {
-    return r.dayNames[a.getDay()];
-  },
-  M: function(a) {
-    return String(a.getMonth() + 1);
-  },
-  MM: function(a) {
-    return Y(a.getMonth() + 1);
-  },
-  MMM: function(a, r) {
-    return r.monthNamesShort[a.getMonth()];
-  },
-  MMMM: function(a, r) {
-    return r.monthNames[a.getMonth()];
-  },
-  YY: function(a) {
-    return Y(String(a.getFullYear()), 4).substr(2);
-  },
-  YYYY: function(a) {
-    return Y(a.getFullYear(), 4);
-  },
-  h: function(a) {
-    return String(a.getHours() % 12 || 12);
-  },
-  hh: function(a) {
-    return Y(a.getHours() % 12 || 12);
-  },
-  H: function(a) {
-    return String(a.getHours());
-  },
-  HH: function(a) {
-    return Y(a.getHours());
-  },
-  m: function(a) {
-    return String(a.getMinutes());
-  },
-  mm: function(a) {
-    return Y(a.getMinutes());
-  },
-  s: function(a) {
-    return String(a.getSeconds());
-  },
-  ss: function(a) {
-    return Y(a.getSeconds());
-  },
-  S: function(a) {
-    return String(Math.round(a.getMilliseconds() / 100));
-  },
-  SS: function(a) {
-    return Y(Math.round(a.getMilliseconds() / 10), 2);
-  },
-  SSS: function(a) {
-    return Y(a.getMilliseconds(), 3);
-  },
-  a: function(a, r) {
-    return a.getHours() < 12 ? r.amPm[0] : r.amPm[1];
-  },
-  A: function(a, r) {
-    return a.getHours() < 12 ? r.amPm[0].toUpperCase() : r.amPm[1].toUpperCase();
-  },
-  ZZ: function(a) {
-    var r = a.getTimezoneOffset();
-    return (r > 0 ? "-" : "+") + Y(Math.floor(Math.abs(r) / 60) * 100 + Math.abs(r) % 60, 4);
-  },
-  Z: function(a) {
-    var r = a.getTimezoneOffset();
-    return (r > 0 ? "-" : "+") + Y(Math.floor(Math.abs(r) / 60), 2) + ":" + Y(Math.abs(r) % 60, 2);
-  }
-}, Fe = function(a) {
-  return +a - 1;
-}, We = [null, A], Pe = [null, te], Ee = [
-  "isPm",
-  te,
-  function(a, r) {
-    var n = a.toLowerCase();
-    return n === r.amPm[0] ? 0 : n === r.amPm[1] ? 1 : null;
-  }
-], Ae = [
-  "timezoneOffset",
-  "[^\\s]*?[\\+\\-]\\d\\d:?\\d\\d|[^\\s]*?Z?",
-  function(a) {
-    var r = (a + "").match(/([+-]|\d\d)/gi);
-    if (r) {
-      var n = +r[1] * 60 + parseInt(r[2], 10);
-      return r[0] === "+" ? n : -n;
-    }
-    return 0;
-  }
-], bt = {
-  D: ["day", A],
-  DD: ["day", E],
-  Do: ["day", A + te, function(a) {
-    return parseInt(a, 10);
-  }],
-  M: ["month", A, Fe],
-  MM: ["month", E, Fe],
-  YY: [
-    "year",
-    E,
-    function(a) {
-      var r = /* @__PURE__ */ new Date(), n = +("" + r.getFullYear()).substr(0, 2);
-      return +("" + (+a > 68 ? n - 1 : n) + a);
-    }
-  ],
-  h: ["hour", A, void 0, "isPm"],
-  hh: ["hour", E, void 0, "isPm"],
-  H: ["hour", A],
-  HH: ["hour", E],
-  m: ["minute", A],
-  mm: ["minute", E],
-  s: ["second", A],
-  ss: ["second", E],
-  YYYY: ["year", gt],
-  S: ["millisecond", "\\d", function(a) {
-    return +a * 100;
-  }],
-  SS: ["millisecond", E, function(a) {
-    return +a * 10;
-  }],
-  SSS: ["millisecond", Dt],
-  d: We,
-  dd: We,
-  ddd: Pe,
-  dddd: Pe,
-  MMM: ["month", te, He("monthNamesShort")],
-  MMMM: ["month", te, He("monthNames")],
-  a: Ee,
-  A: Ee,
-  ZZ: Ae,
-  Z: Ae
-}, oe = {
-  default: "ddd MMM DD YYYY HH:mm:ss",
-  shortDate: "M/D/YY",
-  mediumDate: "MMM D, YYYY",
-  longDate: "MMMM D, YYYY",
-  fullDate: "dddd, MMMM D, YYYY",
-  isoDate: "YYYY-MM-DD",
-  isoDateTime: "YYYY-MM-DDTHH:mm:ssZ",
-  shortTime: "HH:mm",
-  mediumTime: "HH:mm:ss",
-  longTime: "HH:mm:ss.SSS"
-}, Yt = function(a) {
-  return L(oe, a);
-}, _t = function(a, r, n) {
-  if (r === void 0 && (r = oe.default), n === void 0 && (n = {}), typeof a == "number" && (a = new Date(a)), Object.prototype.toString.call(a) !== "[object Date]" || isNaN(a.getTime()))
-    throw new Error("Invalid Date pass to format");
-  r = oe[r] || r;
-  var g = [];
-  r = r.replace(ze, function(S, C) {
-    return g.push(C), "@@@";
-  });
-  var u = L(L({}, ie), n);
-  return r = r.replace($e, function(S) {
-    return kt[S](a, u);
-  }), r.replace(/@@@/g, function() {
-    return g.shift();
-  });
+var E = [
+	"Sunday",
+	"Monday",
+	"Tuesday",
+	"Wednesday",
+	"Thursday",
+	"Friday",
+	"Saturday"
+], D = [
+	"January",
+	"February",
+	"March",
+	"April",
+	"May",
+	"June",
+	"July",
+	"August",
+	"September",
+	"October",
+	"November",
+	"December"
+], O = C(D, 3), k = T({}, {
+	dayNamesShort: C(E, 3),
+	dayNames: E,
+	monthNamesShort: O,
+	monthNames: D,
+	amPm: ["am", "pm"],
+	DoFn: function(e) {
+		return e + [
+			"th",
+			"st",
+			"nd",
+			"rd"
+		][e % 10 > 3 ? 0 : (e - e % 10 == 10 ? 0 : 1) * e % 10];
+	}
+}), A = function(e) {
+	return e.replace(/[|\\{()[^$+*?.-]/g, "\\$&");
+}, j = function(e, t) {
+	for (t === void 0 && (t = 2), e = String(e); e.length < t;) e = "0" + e;
+	return e;
+}, ie = {
+	D: function(e) {
+		return String(e.getDate());
+	},
+	DD: function(e) {
+		return j(e.getDate());
+	},
+	Do: function(e, t) {
+		return t.DoFn(e.getDate());
+	},
+	d: function(e) {
+		return String(e.getDay());
+	},
+	dd: function(e) {
+		return j(e.getDay());
+	},
+	ddd: function(e, t) {
+		return t.dayNamesShort[e.getDay()];
+	},
+	dddd: function(e, t) {
+		return t.dayNames[e.getDay()];
+	},
+	M: function(e) {
+		return String(e.getMonth() + 1);
+	},
+	MM: function(e) {
+		return j(e.getMonth() + 1);
+	},
+	MMM: function(e, t) {
+		return t.monthNamesShort[e.getMonth()];
+	},
+	MMMM: function(e, t) {
+		return t.monthNames[e.getMonth()];
+	},
+	YY: function(e) {
+		return j(String(e.getFullYear()), 4).substr(2);
+	},
+	YYYY: function(e) {
+		return j(e.getFullYear(), 4);
+	},
+	h: function(e) {
+		return String(e.getHours() % 12 || 12);
+	},
+	hh: function(e) {
+		return j(e.getHours() % 12 || 12);
+	},
+	H: function(e) {
+		return String(e.getHours());
+	},
+	HH: function(e) {
+		return j(e.getHours());
+	},
+	m: function(e) {
+		return String(e.getMinutes());
+	},
+	mm: function(e) {
+		return j(e.getMinutes());
+	},
+	s: function(e) {
+		return String(e.getSeconds());
+	},
+	ss: function(e) {
+		return j(e.getSeconds());
+	},
+	S: function(e) {
+		return String(Math.round(e.getMilliseconds() / 100));
+	},
+	SS: function(e) {
+		return j(Math.round(e.getMilliseconds() / 10), 2);
+	},
+	SSS: function(e) {
+		return j(e.getMilliseconds(), 3);
+	},
+	a: function(e, t) {
+		return e.getHours() < 12 ? t.amPm[0] : t.amPm[1];
+	},
+	A: function(e, t) {
+		return e.getHours() < 12 ? t.amPm[0].toUpperCase() : t.amPm[1].toUpperCase();
+	},
+	ZZ: function(e) {
+		var t = e.getTimezoneOffset();
+		return (t > 0 ? "-" : "+") + j(Math.floor(Math.abs(t) / 60) * 100 + Math.abs(t) % 60, 4);
+	},
+	Z: function(e) {
+		var t = e.getTimezoneOffset();
+		return (t > 0 ? "-" : "+") + j(Math.floor(Math.abs(t) / 60), 2) + ":" + j(Math.abs(t) % 60, 2);
+	}
+}, M = function(e) {
+	return e - 1;
+}, N = [null, _], P = [null, x], ae = [
+	"isPm",
+	x,
+	function(e, t) {
+		var n = e.toLowerCase();
+		return n === t.amPm[0] ? 0 : n === t.amPm[1] ? 1 : null;
+	}
+], oe = [
+	"timezoneOffset",
+	"[^\\s]*?[\\+\\-]\\d\\d:?\\d\\d|[^\\s]*?Z?",
+	function(e) {
+		var t = (e + "").match(/([+-]|\d\d)/gi);
+		if (t) {
+			var n = t[1] * 60 + parseInt(t[2], 10);
+			return t[0] === "+" ? n : -n;
+		}
+		return 0;
+	}
+], se = {
+	D: ["day", _],
+	DD: ["day", v],
+	Do: [
+		"day",
+		_ + x,
+		function(e) {
+			return parseInt(e, 10);
+		}
+	],
+	M: [
+		"month",
+		_,
+		M
+	],
+	MM: [
+		"month",
+		v,
+		M
+	],
+	YY: [
+		"year",
+		v,
+		function(e) {
+			var t = +("" + (/* @__PURE__ */ new Date()).getFullYear()).substr(0, 2);
+			return +("" + (+e > 68 ? t - 1 : t) + e);
+		}
+	],
+	h: [
+		"hour",
+		_,
+		void 0,
+		"isPm"
+	],
+	hh: [
+		"hour",
+		v,
+		void 0,
+		"isPm"
+	],
+	H: ["hour", _],
+	HH: ["hour", v],
+	m: ["minute", _],
+	mm: ["minute", v],
+	s: ["second", _],
+	ss: ["second", v],
+	YYYY: ["year", b],
+	S: [
+		"millisecond",
+		"\\d",
+		function(e) {
+			return e * 100;
+		}
+	],
+	SS: [
+		"millisecond",
+		v,
+		function(e) {
+			return e * 10;
+		}
+	],
+	SSS: ["millisecond", y],
+	d: N,
+	dd: N,
+	ddd: P,
+	dddd: P,
+	MMM: [
+		"month",
+		x,
+		w("monthNamesShort")
+	],
+	MMMM: [
+		"month",
+		x,
+		w("monthNames")
+	],
+	a: ae,
+	A: ae,
+	ZZ: oe,
+	Z: oe
+}, ce = {
+	default: "ddd MMM DD YYYY HH:mm:ss",
+	shortDate: "M/D/YY",
+	mediumDate: "MMM D, YYYY",
+	longDate: "MMMM D, YYYY",
+	fullDate: "dddd, MMMM D, YYYY",
+	isoDate: "YYYY-MM-DD",
+	isoDateTime: "YYYY-MM-DDTHH:mm:ssZ",
+	shortTime: "HH:mm",
+	mediumTime: "HH:mm:ss",
+	longTime: "HH:mm:ss.SSS"
+}, le = function(e, t, n) {
+	if (t === void 0 && (t = ce.default), n === void 0 && (n = {}), typeof e == "number" && (e = new Date(e)), Object.prototype.toString.call(e) !== "[object Date]" || isNaN(e.getTime())) throw Error("Invalid Date pass to format");
+	t = ce[t] || t;
+	var r = [];
+	t = t.replace(S, function(e, t) {
+		return r.push(t), "@@@";
+	});
+	var i = T(T({}, k), n);
+	return t = t.replace(re, function(t) {
+		return ie[t](e, i);
+	}), t.replace(/@@@/g, function() {
+		return r.shift();
+	});
 };
-function wt(a, r, n) {
-  if (n === void 0 && (n = {}), typeof r != "string")
-    throw new Error("Invalid format in fecha parse");
-  if (r = oe[r] || r, a.length > 1e3)
-    return null;
-  var g = /* @__PURE__ */ new Date(), u = {
-    year: g.getFullYear(),
-    month: 0,
-    day: 1,
-    hour: 0,
-    minute: 0,
-    second: 0,
-    millisecond: 0,
-    isPm: null,
-    timezoneOffset: null
-  }, S = [], C = [], $ = r.replace(ze, function(m, o) {
-    return C.push(Ve(o)), "@@@";
-  }), R = {}, F = {};
-  $ = Ve($).replace($e, function(m) {
-    var o = bt[m], Z = o[0], ue = o[1], ae = o[3];
-    if (R[Z])
-      throw new Error("Invalid format. " + Z + " specified twice in format");
-    return R[Z] = !0, ae && (F[ae] = !0), S.push(o), "(" + ue + ")";
-  }), Object.keys(F).forEach(function(m) {
-    if (!R[m])
-      throw new Error("Invalid format. " + m + " is required in specified format");
-  }), $ = $.replace(/@@@/g, function() {
-    return C.shift();
-  });
-  var _ = a.match(new RegExp($, "i"));
-  if (!_)
-    return null;
-  for (var f = L(L({}, ie), n), c = 1; c < _.length; c++) {
-    var W = S[c - 1], M = W[0], z = W[2], ne = z ? z(_[c], f) : +_[c];
-    if (ne == null)
-      return null;
-    u[M] = ne;
-  }
-  u.isPm === 1 && u.hour != null && +u.hour != 12 ? u.hour = +u.hour + 12 : u.isPm === 0 && +u.hour == 12 && (u.hour = 0);
-  var I;
-  if (u.timezoneOffset == null) {
-    I = new Date(u.year, u.month, u.day, u.hour, u.minute, u.second, u.millisecond);
-    for (var N = [
-      ["month", "getMonth"],
-      ["day", "getDate"],
-      ["hour", "getHours"],
-      ["minute", "getMinutes"],
-      ["second", "getSeconds"]
-    ], c = 0, v = N.length; c < v; c++)
-      if (R[N[c][0]] && u[N[c][0]] !== I[N[c][1]]())
-        return null;
-  } else if (I = new Date(Date.UTC(u.year, u.month, u.day, u.hour, u.minute - u.timezoneOffset, u.second, u.millisecond)), u.month > 11 || u.month < 0 || u.day > 31 || u.day < 1 || u.hour > 23 || u.hour < 0 || u.minute > 59 || u.minute < 0 || u.second > 59 || u.second < 0)
-    return null;
-  return I;
+function ue(e, t, n) {
+	if (n === void 0 && (n = {}), typeof t != "string") throw Error("Invalid format in fecha parse");
+	if (t = ce[t] || t, e.length > 1e3) return null;
+	var r = {
+		year: (/* @__PURE__ */ new Date()).getFullYear(),
+		month: 0,
+		day: 1,
+		hour: 0,
+		minute: 0,
+		second: 0,
+		millisecond: 0,
+		isPm: null,
+		timezoneOffset: null
+	}, i = [], a = [], o = t.replace(S, function(e, t) {
+		return a.push(A(t)), "@@@";
+	}), s = {}, c = {};
+	o = A(o).replace(re, function(e) {
+		var t = se[e], n = t[0], r = t[1], a = t[3];
+		if (s[n]) throw Error("Invalid format. " + n + " specified twice in format");
+		return s[n] = !0, a && (c[a] = !0), i.push(t), "(" + r + ")";
+	}), Object.keys(c).forEach(function(e) {
+		if (!s[e]) throw Error("Invalid format. " + e + " is required in specified format");
+	}), o = o.replace(/@@@/g, function() {
+		return a.shift();
+	});
+	var l = e.match(new RegExp(o, "i"));
+	if (!l) return null;
+	for (var u = T(T({}, k), n), d = 1; d < l.length; d++) {
+		var ee = i[d - 1], te = ee[0], f = ee[2], p = f ? f(l[d], u) : +l[d];
+		if (p == null) return null;
+		r[te] = p;
+	}
+	r.isPm === 1 && r.hour != null && +r.hour != 12 ? r.hour = +r.hour + 12 : r.isPm === 0 && +r.hour == 12 && (r.hour = 0);
+	var m;
+	if (r.timezoneOffset == null) {
+		m = new Date(r.year, r.month, r.day, r.hour, r.minute, r.second, r.millisecond);
+		for (var h = [
+			["month", "getMonth"],
+			["day", "getDate"],
+			["hour", "getHours"],
+			["minute", "getMinutes"],
+			["second", "getSeconds"]
+		], d = 0, g = h.length; d < g; d++) if (s[h[d][0]] && r[h[d][0]] !== m[h[d][1]]()) return null;
+	} else if (m = new Date(Date.UTC(r.year, r.month, r.day, r.hour, r.minute - r.timezoneOffset, r.second, r.millisecond)), r.month > 11 || r.month < 0 || r.day > 31 || r.day < 1 || r.hour > 23 || r.hour < 0 || r.minute > 59 || r.minute < 0 || r.second > 59 || r.second < 0) return null;
+	return m;
 }
-var O = {
-  format: _t,
-  parse: wt,
-  defaultI18n: Je,
-  setGlobalDateI18n: yt,
-  setGlobalDateMasks: Yt
-};
-const St = (a, r) => {
-  const n = a.__vccOpts || a;
-  for (const [g, u] of r)
-    n[g] = u;
-  return n;
-}, Ot = { style: { "pointer-events": "none" } }, Ct = { class: "h_datepicker_month_control_panel" }, It = { class: "h_datepicker_month_control_item" }, Nt = ["onClick"], Tt = { class: "h_datepicker_month_control_item" }, xt = { class: "h_datepicker_month_control_item" }, Bt = ["onClick"], Ht = { class: "h_datepicker_month_box" }, Vt = { class: "h_datepicker_weeks_container" }, Ft = { class: "h_datepicker_week_name" }, Wt = { class: "h_datepicker_dates_container" }, Pt = ["onClick", "onMouseover"], Et = {
-  __name: "Vue3HotelDatePicker",
-  props: {
-    format: {
-      default: "YYYY-MM-DD",
-      type: String
-    },
-    startOfWeek: {
-      default: "monday",
-      type: String
-    },
-    separator: {
-      default: "-",
-      type: String
-    },
-    selectedDates: {
-      default: !1,
-      type: [Array, Boolean]
-    },
-    startDate: {
-      default: !1,
-      type: [String, Boolean]
-    },
-    endDate: {
-      default: !1,
-      type: [String, Boolean]
-    },
-    minDate: {
-      default: () => /* @__PURE__ */ new Date()
-    },
-    // The start view date. All the dates before this date will be disabled.
-    maxDate: {
-      default: () => !1,
-      type: Boolean
-    },
-    // The end view date. All the dates after this date will be disabled.
-    disabledDaysOfWeek: {
-      default: () => []
-    },
-    moveBothMonths: {
-      default: !1,
-      type: Boolean
-    },
-    noCheckOutDates: {
-      default: () => []
-    },
-    noCheckInDates: {
-      default: () => []
-    },
-    noCheckInDaysOfWeek: {
-      default: () => []
-    },
-    noCheckOutDaysOfWeek: {
-      default: () => []
-    },
-    maxNights: 0,
-    minNights: 1,
-    singleMonthBreakpoint: {
-      default: 768,
-      type: [Number, String]
-    },
-    selectForward: Boolean,
-    showSingleMonth: Boolean,
-    disabledDates: {
-      default: !1,
-      type: [Array, Boolean]
-    },
-    enableCheckout: Boolean,
-    weekDays: {
-      default: () => ["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
-      type: Array
-    },
-    monthNames: {
-      default: () => ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
-      type: Array
-    },
-    i18n: {
-      default: () => ({
-        "not selected": "Not selected",
-        night: "Night",
-        nights: "Nights"
-      }),
-      type: Object
-    }
-  },
-  emits: {
-    selected: ({ start: a, end: r }) => !0
-  },
-  setup(a, { emit: r }) {
-    const n = a, g = r, u = d(!0);
-    d(!1);
-    const S = d(!1), C = d(!1), $ = d(!1), R = d(!1), F = d(n.maxNights), _ = d(n.minNights), f = d(n.startDate ?? !1), c = d(n.endDate ?? !1);
-    d(null);
-    const W = d(null), M = d({}), z = d(0);
-    d(null);
-    const ne = d(null);
-    S.value = !1, C.value = !1, $.value = !1, R.value = !1;
-    const I = d(n.startDate), N = d(n.endDate), v = d([]), m = d({
-      start: null,
-      end: null
-    }), o = d({
-      months: [],
-      open: !0,
-      submitButton: !1,
-      clearButton: !1,
-      showSingleMonth: n.showSingleMonth
-    });
-    ft({
-      error: !1,
-      textContent: "",
-      show: !1
-    });
-    const Z = (e) => e in n.i18n ? n.i18n[e] : "", ue = () => {
-      let e = [];
-      if (n.startOfWeek === "monday") {
-        for (let t = 0; t < 7; t++)
-          e.push(n.weekDays[(1 + t) % 7]);
-        return e;
-      }
-      for (let t = 0; t < 7; t++)
-        e.push(n.weekDays[t]);
-      return e;
-    }, ae = (e) => n.monthNames[e], J = (e) => {
-      const t = new Date(e.valueOf());
-      return new Date(t.setMonth(t.getMonth() + 1, 1));
-    }, fe = (e) => {
-      const t = new Date(e.valueOf());
-      return new Date(t.setMonth(t.getMonth() - 1, 1));
-    }, y = (e, t = null) => {
-      let l = t ?? n.format;
-      return O.format(e, l);
-    }, K = (e, t = null) => {
-      let l = t ?? n.format;
-      return O.parse(e, l);
-    }, Ue = () => {
-      _.value = n.minNights > 1 ? n.minNights + 1 : 2, F.value = n.maxNights > 0 ? n.maxNights + 1 : 0, n.startDate && typeof n.startDate == "string" && (I.value = K(n.startDate)), n.endDate && typeof n.endDate == "string" && (N.value = K(N.value)), n.disabledDates.length > 0 && st(), n.disabledDaysOfWeek.length > 0 && lt(), I.value && N.value ? it(I.value, N.value) : ke(), ne.value && (u.value || !f.value && !c.value) && (o.value.clearButton = !0), z.value = 0, W.value = !1;
-    }, P = (e, t) => {
-      e = new Date(e);
-      let l = {
-        name: ae(e.getMonth()),
-        month: e.getMonth(),
-        year: e.getFullYear(),
-        id: e.getFullYear() + e.getMonth(),
-        days: [],
-        nextBtn: !0,
-        prevBtn: !0
-      };
-      e.setHours(0, 0, 0, 0), l.days = je(e), o.value.months.splice(t - 1, 1, l), Se(), M.value["month" + t] = e;
-    }, Me = {
-      date: {},
-      type: "",
-      day: "",
-      time: "",
-      isValid: !1,
-      isTmp: !1,
-      isCurrentMonth: !1,
-      isToday: !1,
-      isNoCheckIn: !1,
-      isNoCheckOut: !1,
-      isDisabled: !1,
-      isDayOfWeekDisabled: !1,
-      isFirstEnabledDate: !1,
-      isCheckInOnly: !1,
-      isDayBeforeDisabledDate: !1
-    }, je = (e) => {
-      const t = [], l = [];
-      let s;
-      e.setDate(1);
-      let i = e.getDay();
-      const D = e.getMonth();
-      if (i === 0 && n.startOfWeek === "monday" && (i = 7), i > 0)
-        for (let p = i; p > 0; p--) {
-          const h = new Date(e.getTime() - 864e5 * p);
-          s = le(h.getTime()), (n.minDate && k(h, n.minDate) < 0 || n.maxDate && k(h, n.maxDate) > 0) && (s = !1), t.push(
-            Object.assign({}, Me, {
-              date: h,
-              type: "lastMonth",
-              day: h.getDate(),
-              time: h.getTime(),
-              isValid: s
-            })
-          );
-        }
-      for (let p = 0; p < 40; p++) {
-        const h = Q(e, p);
-        s = le(h.getTime()), (n.minDate && k(h, n.minDate) < 0 || n.maxDate && k(h, n.maxDate) > 0) && (s = !1), t.push(Object.assign({}, Me, {
-          date: h,
-          type: h.getMonth() === D ? "visibleMonth" : "nextMonth",
-          day: h.getDate(),
-          time: h.getTime(),
-          isCurrentMonth: h.getMonth() === D,
-          isValid: s
-        }));
-      }
-      for (let p = 0; p < 6 && t[p * 7].type !== "nextMonth"; p++)
-        for (let h = 0; h < 7; h++) {
-          let w = n.startOfWeek === "monday" ? h + 1 : h;
-          w = t[p * 7 + w], l.push(ye(w));
-        }
-      return l;
-    }, ye = (e) => {
-      const t = y(e.time) === y(/* @__PURE__ */ new Date()), l = y(e.time) === y(n.minDate);
-      let s = !1, i = !1, D = !1, p = !1, h = !1, w = !1;
-      if (e.valid || e.type === "visibleMonth") {
-        const me = y(e.time, "YYYY-MM-DD");
-        if (n.disabledDates.length > 0) {
-          const x = Ce(e.date);
-          if (x[0] === !1 && (x[0] = _e(I.value, 1)), x[0] && x[1] && k(e.date, x[0]) && T(x[0], x[1]) - 2 > 0) {
-            const De = T(x[1], e.date) - 1, ut = T(e.date, x[0]) - 1;
-            (n.selectForward && De < _.value || !n.selectForward && De < _.value && ut < _.value) && (e.isValid = !1), !e.isValid && n.enableCheckout && De === 2 && (w = !0);
-          }
-          n.disabledDates.indexOf(me) > -1 ? (e.isValid = !1, s = !0, z.value++, W.value = e.date) : z.value = 0, e.isValid && W.value && k(e.date, W.value) > 0 && T(e.date, W.value) === 2 && (h = !0);
-        }
-        n.disabledDaysOfWeek.length > 0 && n.disabledDaysOfWeek.indexOf(O.format(e.time, "ddd")) > -1 && (e.isValid = !1, p = !0), n.noCheckInDates.length > 0 && n.noCheckInDates.indexOf(me) > -1 && (i = !0, h = !1), n.noCheckOutDates.length > 0 && n.noCheckOutDates.indexOf(me) > -1 && (D = !0), n.noCheckInDaysOfWeek.length > 0 && n.noCheckInDaysOfWeek.indexOf(O.format(e.time, "ddd")) > -1 && (i = !0, h = !1), n.noCheckOutDaysOfWeek.length > 0 && n.noCheckOutDaysOfWeek.indexOf(O.format(e.time, "ddd")) > -1 && (D = !0);
-      }
-      return e.isToday = t, e.isDisabled = s, e.isCheckOutEnabled = !(s && n.enableCheckout && z.value === 1), e.isDayBeforeDisabledDate = w, e.isCheckInOnly = l || h, e.isNoCheckIn = i, e.isNoCheckOut = D, e.isDayOfWeekDisabled = p, e;
-    }, Ge = () => {
-      for (let e = 0; e < o.value.months.length; e++)
-        for (let t = 0; t < o.value.months[e].days.length; t++) {
-          const l = parseInt(o.value.months[e].days[t].time, 10), s = new Date(l);
-          let i;
-          i = le(s.getTime()), (n.minDate && k(s, n.minDate) < 0 || n.maxDate && k(s, n.maxDate) > 0) && (i = !1), o.value.months[e].days[t].isValid = i, o.value.months[e].days[t] = ye(o.value.months[e].days[t]);
-        }
-    }, ke = () => {
-      P(n.minDate, 1), P(J(n.minDate), 2), j();
-    }, qe = (e, t, ...l) => {
-      if (l.length > 0 && l[0] !== void 0 && l[0], e.getTime() > t.getTime()) {
-        let i = t;
-        t = e, e = i, i = null;
-      }
-      let s = !0;
-      if ((n.minDate && k(e, n.minDate) < 0 || n.maxDate && k(t, n.maxDate) > 0) && (s = !1), !s) {
-        ke();
-        return;
-      }
-      e.setTime(e.getTime() + 12 * 60 * 60 * 1e3), t.setTime(t.getTime() + 12 * 60 * 60 * 1e3), f.value = e.getTime(), c.value = t.getTime(), k(e, t) > 0 && re(e, t) === 0 && (t = J(e)), re(e, t) === 0 && (t = J(e)), P(e, 1), P(t, 2), se(), j(), Ye();
-    }, se = () => {
-      if (!(!f.value && !c.value))
-        for (let e = 0; e < o.value.months.length; e++)
-          for (let t = 0; t < o.value.months[e].days.length; t++) {
-            const l = o.value.months[e].days[t], s = parseInt(l.time, 10);
-            f.value && c.value && c.value >= s && f.value <= s || f.value && !c.value && y(f.value, "YYYY-MM-DD") === y(s, "YYYY-MM-DD") ? l.isSelected = !0 : l.isSelected = !1, f.value && y(f.value, "YYYY-MM-DD") === y(s, "YYYY-MM-DD") ? l.isFirstDaySelected = !0 : l.isFirstDaySelected = !1, c.value && y(c.value, "YYYY-MM-DD") === y(s, "YYYY-MM-DD") ? l.isLastDaySelected = !0 : l.isLastDaySelected = !1, o.value.months[e].days[t] = Object.assign({}, l);
-          }
-    }, Ke = (e, t) => {
-      if (!e.isValid || !e.isCurrentMonth)
-        return;
-      const l = m.value.start === null, s = parseInt(e.time, 10);
-      if (!(m.value.start && m.value.start.time === e.time)) {
-        if (l) {
-          if (e.isNoCheckIn)
-            return;
-        } else if (f.value && (f.value > s && e.isNoCheckIn || m.value.start && m.value.start.isNoCheckIn && f.value > s || e.isNoCheckOut && s > f.value))
-          return;
-        if (l ? (m.value.start = e, f.value = s, c.value = !1) : f.value && (m.value.end = e, c.value = s, Ie()), f.value && c.value && f.value > c.value) {
-          const i = c.value;
-          c.value = f.value, f.value = i;
-        }
-        f.value = parseInt(f.value, 10), c.value = parseInt(c.value, 10), at(), f.value && !c.value && Oe(e), Se(), Ye(), f.value && c.value && Ge(), se(), c.value && g("selected", { start: f.value, end: c.value }), m.value.end && Qe();
-      }
-    }, Qe = () => {
-      m.value.start = null, m.value.end = null;
-    }, le = (e) => {
-      if (e = parseInt(e, 10), n.minDate && k(e, n.minDate) < 0 || n.maxDate && k(e, n.maxDate) > 0)
-        return !1;
-      if (f.value && !c.value) {
-        if (F.value > 0 && T(e, f.value) > F.value || _.value > 0 && T(e, f.value) > 1 && T(e, f.value) < _.value || n.selectForward && e < f.value)
-          return !1;
-        if (n.disabledDates.length > 0) {
-          const t = Ce(new Date(parseInt(f.value, 10)));
-          if (t[0] && k(e, t[0]) <= 0 || t[1] && k(e, t[1]) >= 0)
-            return !1;
-        }
-        if (n.disabledDaysOfWeek.length > 0) {
-          const t = rt(new Date(parseInt(f.value, 10)));
-          if (t[0] && k(e, t[0]) <= 0 || t[1] && k(e, t[1]) >= 0)
-            return !1;
-        }
-      }
-      return !0;
-    }, be = () => {
-      for (let e = 0; e < o.value.months.length; e++)
-        for (let t = 0; t < o.value.months[e].days.length; t++)
-          o.value.months[e].days[t].selected = !1, o.value.months[e].days[t].isFirstDaySelected = !1, o.value.months[e].days[t].isLastDaySelected = !1;
-      return !0;
-    }, Ye = () => {
-      const e = T(c.value, f.value);
-      (F.value && e > F.value || _.value && e < _.value) && (f.value = !1, c.value = !1, be());
-    }, Q = (e, t) => {
-      const l = new Date(e);
-      return l.setDate(l.getDate() + t), l;
-    }, _e = (e, t) => {
-      const l = new Date(e);
-      return l.setDate(l.getDate() - t), l;
-    }, T = (e, t) => Math.abs(we(e) - we(t)) + 1, k = (e, t) => {
-      const l = parseInt(y(e, "YYYYMMDD"), 10) - parseInt(y(t, "YYYYMMDD"), 10);
-      return l > 0 ? 1 : l === 0 ? 0 : -1;
-    }, re = (e, t) => {
-      const l = parseInt(y(e, "YYYYMM"), 10) - parseInt(y(t, "YYYYMM"), 10);
-      return l > 0 ? 1 : l === 0 ? 0 : -1;
-    }, we = (e) => Math.round(Xe(e) / 864e5), Xe = (e) => (typeof e == "object" && e.getTime && (e = e.getTime()), typeof e == "string" && !e.match(/\d{13}/) && (e = K(e).getTime()), e = parseInt(e, 10) - (/* @__PURE__ */ new Date()).getTimezoneOffset() * 60 * 1e3, e), et = (e, t) => {
-      const l = t === 1;
-      let s = l ? M.value.month2 : M.value.month1;
-      return s = J(s), !ce() && !l && re(s, M.value.month2) >= 0 || U(s) ? !1 : (n.moveBothMonths && l && P(M.value.month2, 1), P(s, t + 1), se(), j(), !0);
-    }, tt = (e, t) => {
-      const l = t === 1;
-      let s = l ? M.value.month2 : M.value.month1;
-      return s = fe(s), l && re(s, M.value.month1) <= 0 || U(s) ? !1 : (n.moveBothMonths && !l && P(M.value.month1, 2), P(s, t + 1), se(), j(), !0);
-    }, ce = () => n.showSingleMonth || nt(), nt = () => typeof window > "u" ? !1 : window.innerWidth < +n.singleMonthBreakpoint, U = (e) => {
-      const t = new Date(e.valueOf());
-      return n.minDate && new Date(t.getFullYear(), t.getMonth() + 1, 0, 23, 59, 59) < n.minDate || n.maxDate && new Date(t.getFullYear(), t.getMonth(), 1) > n.maxDate;
-    }, j = () => {
-      if (ce()) {
-        U(fe(M.value.month1)) ? o.value.months[0].prevBtn = !1 : o.value.months[0].prevBtn = !0, U(J(M.value.month1)) ? o.value.months[0].nextBtn = !1 : o.value.months[0].nextBtn = !0;
-        return;
-      }
-      const e = parseInt(y(M.value.month1, "YYYYMM"), 10), t = parseInt(y(M.value.month2, "YYYYMM"), 10), l = Math.abs(e - t);
-      l > 1 && l !== 89 ? (o.value.months[0].nextBtn = !0, o.value.months[1].prevBtn = !0) : (o.value.months[0].nextBtn = !1, o.value.months[1].prevBtn = !1), U(fe(M.value.month1)) ? o.value.months[0].prevBtn = !1 : o.value.months[0].prevBtn = !0, U(J(M.value.month2)) ? o.value.months[1].nextBtn = !1 : o.value.months[1].nextBtn = !0;
-    }, Se = () => {
-      const e = f.value && !c.value;
-      for (let t = 0; t < o.value.months.length; t++)
-        for (let l = 0; l < o.value.months[t].days.length; l++) {
-          let s = o.value.months[t].days[l];
-          if (!s.isValid && s.isTmp && (s.isTmp = !1, s.isTmpValid ? s.isValid = !0 : s.isTmpValid = !0), e) {
-            if (s.isCurrentMonth && (s.isValid || s.isDisabled || s.isBeforeDisabledDate)) {
-              const i = parseInt(s.time, 10);
-              le(i) ? (s.isValid = !0, s.isTmp = !0, s.isDisabled = !1) : (s.valid || (s.isTmpValid = !1), s.isValid = !1, s.isTmp = !0);
-            }
-          } else
-            (s.checkOutEnabled || s.beforeDisabledDate) && (s.isValid = !1, s.beforeDisabledDate || (s.isDisabled = !0));
-          o.value.months[t].days.splice(l, 1, s);
-        }
-      return !0;
-    }, Oe = (e, t) => {
-      const l = parseInt(e.time, 10);
-      if (e.isValid && Ne(e)) {
-        for (let s = 0; s < o.value.months.length; s++)
-          for (let i = 0; i < o.value.months[s].days.length; i++) {
-            const D = parseInt(o.value.months[s].days[i].time, 10);
-            D === l ? o.value.months[s].days[i].isHovering = !0 : o.value.months[s].days[i].isHovering = !1, f.value && !c.value && (f.value < D && l >= D || f.value > D && l <= D) ? o.value.months[s].days[i].isHovering = !0 : o.value.months[s].days[i].isHovering = !1;
-          }
-        f.value && !c.value && (b.count = T(l, f.value) - 1);
-      }
-    }, at = () => {
-      for (let e = 0; e < o.value.months.length; e++)
-        for (let t = 0; t < o.value.months[e].days.length; t++)
-          o.value.months[e].days[t].isHovering = !1;
-    }, st = () => {
-      const e = [];
-      for (let t = 0; t < n.disabledDates.length; t++)
-        e[t] = O.parse(n.disabledDates[t], "YYYY-MM-DD");
-      e.sort((t, l) => t - l), v.value = e;
-    }, Ce = (e) => {
-      let t = [!1, !1];
-      if (e < v.value[0])
-        n.enableCheckout ? t = [!1, Q(v.value[0], 1)] : t = [!1, v.value[0]];
-      else if (e > v.value[v.value.length - 1])
-        t = [v.value[v.value.length - 1], !1];
-      else {
-        let l = v.value.length, s = v.value.length;
-        const i = Math.abs(new Date(0, 0, 0).valueOf());
-        let D = i, p = -i, h = 0, w;
-        for (w = 0; w < v.value.length; ++w)
-          h = e - v.value[w], h < 0 && h > p && (s = w, p = h), h > 0 && h < D && (l = w, D = h);
-        v.value[l] && (t[0] = v.value[l]), typeof v.value[l] > "u" ? t[1] = !1 : n.enableCheckout ? t[1] = Q(v.value[s], 1) : t[1] = v.value[s];
-      }
-      return t;
-    }, he = d([]), lt = () => {
-      const e = [], t = [], l = /* @__PURE__ */ new Date();
-      for (let s = 0; s < 7; s++) {
-        const i = Q(l, s);
-        e[O.format(i, "d")] = O.format(i, "ddd");
-      }
-      for (let s = 0; s < n.disabledDaysOfWeek.length; s++)
-        t.push(e.indexOf(n.disabledDaysOfWeek[s]));
-      t.sort(), he.value = t;
-    }, rt = (e) => {
-      const t = [!1, !1];
-      for (let l = 0; l < 7; l++) {
-        const s = _e(e, l);
-        if (he.value.indexOf(parseInt(O.format(s, "d"), 10)) > -1) {
-          t[0] = s;
-          break;
-        }
-      }
-      for (let l = 0; l < 7; l++) {
-        const s = Q(e, l);
-        if (he.value.indexOf(parseInt(O.format(s, "d"), 10)) > -1) {
-          t[1] = s;
-          break;
-        }
-      }
-      return t;
-    }, it = (e, t) => {
-      typeof e == "string" && typeof t == "string" ? (e = K(e), t = K(t)) : (e = new Date(e.getTime()), t = new Date(t.getTime())), qe(e, t);
-    }, b = ct(
-      {
-        show: !1,
-        top: 0,
-        left: 0,
-        width: 0,
-        count: 0,
-        error: !1
-      }
-    ), Ie = () => b.show = !1, Ne = (e) => !(!e.isValid || !e.isCurrentMonth), ot = (e, t) => {
-      if (!m.value.start || m.value.start && m.value.end || !Ne(t))
-        return !1;
-      b.show = !0;
-      const l = Te.value.getBoundingClientRect(), s = e.target.getBoundingClientRect();
-      b.top = s.top - l.top - 35, b.left = s.left - l.left, b.width = s.width;
-    }, Te = d(null), de = () => {
-      o.value.showSingleMonth = ce();
-    };
-    ht(() => o.value.showSingleMonth, () => {
-      j();
-    });
-    const xe = () => typeof client < "u";
-    dt(() => {
-      window.removeEventListener("resize", () => de());
-    });
-    const ve = d(!1);
-    return vt(() => {
-      window.addEventListener("resize", () => de()), de(), j(), ve.value = !0;
-    }), Ue(), (e, t) => (B(), H("div", {
-      class: "h_datepicker",
-      ref_key: "parent",
-      ref: Te
-    }, [
-      V("div", {
-        class: X([{ h_datepicker_invisible: !b.show, visible: b.show }, "h_datepicker_popup"]),
-        style: mt(
-          { top: b.top + "px", left: b.left + "px", width: b.width + "px" }
-        )
-      }, [
-        V("div", Ot, [
-          G(e.$slots, "popup", {
-            nights: b.count
-          }, () => [
-            q(ee(b.count ? b.count + " " + (b.count > 1 ? Z("nights") : Z("night")) : Z("not selected")), 1)
-          ], !0)
-        ])
-      ], 6),
-      (B(!0), H(ge, null, pe(o.value.months, (l, s) => (B(), H("div", {
-        key: l.id,
-        class: X(["h_datepicker_month", {
-          h_datepicker_hidden: s === 1 && o.value.showSingleMonth,
-          h_datepicker_two_month_display: !o.value.showSingleMonth,
-          h_datepicker_one_month_display: o.value.showSingleMonth,
-          "h_datepicker_month-1": s === 0,
-          "h_datepicker_month-2": s === 1
-        }])
-      }, [
-        V("div", Ct, [
-          V("div", It, [
-            ve.value || !xe ? (B(), H("div", {
-              key: 0,
-              onClick: (i) => tt(l, s),
-              class: X(["h_datepicker_month_control_btn", { h_datepicker_invisible: !l.prevBtn }])
-            }, [
-              G(e.$slots, "prev", {}, () => [
-                q(" <<")
-              ], !0)
-            ], 10, Nt)) : Be("", !0)
-          ]),
-          V("div", Tt, [
-            G(e.$slots, "month", { month: l }, () => [
-              q(ee(l.name) + " " + ee(l.year), 1)
-            ], !0)
-          ]),
-          V("div", xt, [
-            ve.value || !xe ? (B(), H("div", {
-              key: 0,
-              onClick: (i) => et(l, s),
-              class: X(["h_datepicker_month_control_btn", { h_datepicker_invisible: !l.nextBtn }])
-            }, [
-              G(e.$slots, "next", {}, () => [
-                q(" >>")
-              ], !0)
-            ], 10, Bt)) : Be("", !0)
-          ])
-        ]),
-        V("div", Ht, [
-          V("div", Vt, [
-            (B(!0), H(ge, null, pe(ue(), (i) => (B(), H("div", Ft, [
-              G(e.$slots, "weekday", { weekday: i }, () => [
-                q(ee(i), 1)
-              ], !0)
-            ]))), 256))
-          ]),
-          V("div", Wt, [
-            (B(!0), H(ge, null, pe(l.days, (i) => (B(), H("div", {
-              onClick: (D) => Ke(i),
-              onMouseout: t[0] || (t[0] = (D) => Ie()),
-              onMouseover: (D) => Oe(i) || ot(D, i),
-              class: X([{
-                h_datepicker_notCurrentMonth: !i.isCurrentMonth,
-                h_datepicker_valid: i.isValid,
-                h_datepicker_invalid: !i.isValid,
-                h_datepicker_tmp_invalid: !i.isTmpValid,
-                h_datepicker_tmp_valid: i.isTmpValid,
-                h_datepicker_disabled: i.isDisabled,
-                h_datepicker_checkout_enabled: i.isCheckOutEnabled,
-                h_datepicker_checkout_disabled: !i.isCheckOutEnabled,
-                h_datepicker_checkin_enabled: !i.isNoCheckIn,
-                h_datepicker_checkin_disabled: i.isNoCheckIn,
-                h_datepicker_before_disabled_date: i.isDayBeforeDisabledDate,
-                h_datepicker_first_day_selected: i.isFirstDaySelected,
-                h_datepicker_last_day_selected: i.isLastDaySelected,
-                h_datepicker_selected: i.isSelected,
-                h_datepicker_hovering: i.isHovering
-              }, "h_datepicker_day"])
-            }, [
-              G(e.$slots, "day", { day: i }, () => [
-                q(ee(i.day), 1)
-              ], !0)
-            ], 42, Pt))), 256))
-          ])
-        ])
-      ], 2))), 128))
-    ], 512));
-  }
-}, $t = /* @__PURE__ */ St(Et, [["__scopeId", "data-v-e09819b5"]]);
-export {
-  $t as default
-};
+//#endregion
+//#region src/components/Vue3HotelDatePicker.vue?vue&type=script&setup=true&lang.ts
+var de = ["aria-label"], fe = ["aria-label"], pe = ["aria-label"], me = ["aria-labelledby"], he = { class: "h-datepicker__month-header h_datepicker_month_control_panel" }, ge = [
+	"disabled",
+	"aria-label",
+	"onClick"
+], _e = ["id"], ve = [
+	"disabled",
+	"aria-label",
+	"onClick"
+], ye = ["aria-labelledby"], be = ["aria-selected"], xe = [
+	"aria-disabled",
+	"tabindex",
+	"data-date",
+	"aria-label",
+	"onClick",
+	"onKeydown",
+	"onPointerenter"
+], Se = {
+	key: 0,
+	class: "h-datepicker__extra-text"
+}, Ce = {
+	key: 1,
+	class: "h-datepicker__day-placeholder",
+	"aria-hidden": "true"
+}, we = /* @__PURE__ */ ((e, t) => {
+	let n = e.__vccOpts || e;
+	for (let [e, r] of t) n[e] = r;
+	return n;
+})(/* @__PURE__ */ o({
+	__name: "Vue3HotelDatePicker",
+	props: {
+		format: {
+			type: String,
+			default: "YYYY-MM-DD"
+		},
+		startOfWeek: {
+			type: String,
+			default: "monday"
+		},
+		separator: {
+			type: String,
+			default: "-"
+		},
+		selectedDates: {
+			type: [Array, Boolean],
+			default: !1
+		},
+		startDate: {
+			type: [
+				Date,
+				String,
+				Number,
+				Boolean
+			],
+			default: !1
+		},
+		endDate: {
+			type: [
+				Date,
+				String,
+				Number,
+				Boolean
+			],
+			default: !1
+		},
+		minDate: {
+			type: [
+				Date,
+				String,
+				Number,
+				Boolean
+			],
+			default: () => /* @__PURE__ */ new Date()
+		},
+		maxDate: {
+			type: [
+				Date,
+				String,
+				Number,
+				Boolean
+			],
+			default: !1
+		},
+		disabledDaysOfWeek: {
+			type: Array,
+			default: () => []
+		},
+		showTopbar: {
+			type: Boolean,
+			default: !1
+		},
+		moveBothMonths: {
+			type: Boolean,
+			default: !1
+		},
+		ariaDayFormat: {
+			type: String,
+			default: "dddd, MMMM DD, YYYY"
+		},
+		noCheckOutDates: {
+			type: Array,
+			default: () => []
+		},
+		noCheckInDates: {
+			type: Array,
+			default: () => []
+		},
+		noCheckInDaysOfWeek: {
+			type: Array,
+			default: () => []
+		},
+		noCheckOutDaysOfWeek: {
+			type: Array,
+			default: () => []
+		},
+		maxNights: {
+			type: Number,
+			default: 0
+		},
+		minNights: {
+			type: Number,
+			default: 1
+		},
+		singleMonthBreakpoint: {
+			type: [
+				Number,
+				String,
+				Boolean
+			],
+			default: 768
+		},
+		topbarPosition: {
+			type: String,
+			default: "top"
+		},
+		onOpenDatepicker: {
+			type: Boolean,
+			default: !1
+		},
+		minNightsMultiple: {
+			type: Boolean,
+			default: !1
+		},
+		selectForward: {
+			type: Boolean,
+			default: !1
+		},
+		showSingleMonth: {
+			type: Boolean,
+			default: !1
+		},
+		disabledDates: {
+			type: [Array, Boolean],
+			default: !1
+		},
+		daysWithExtraText: {
+			type: Array,
+			default: () => []
+		},
+		enableCheckout: {
+			type: Boolean,
+			default: !1
+		},
+		weekDays: {
+			type: Array,
+			default: () => [
+				"sun",
+				"mon",
+				"tue",
+				"wed",
+				"thu",
+				"fri",
+				"sat"
+			]
+		},
+		monthNames: {
+			type: Array,
+			default: () => [
+				"January",
+				"February",
+				"March",
+				"April",
+				"May",
+				"June",
+				"July",
+				"August",
+				"September",
+				"October",
+				"November",
+				"December"
+			]
+		},
+		getValues: {
+			type: Function,
+			default: void 0
+		},
+		extraDayText: {
+			type: Function,
+			default: void 0
+		},
+		i18n: {
+			type: Object,
+			default: () => ({})
+		},
+		mobileMonths: {
+			type: Number,
+			default: 12
+		}
+	},
+	emits: [
+		"selected",
+		"select",
+		"change",
+		"update:startDate",
+		"update:endDate"
+	],
+	setup(o, { expose: re, emit: _ }) {
+		let v = {
+			selected: "Your stay:",
+			night: "Night",
+			nights: "Nights",
+			button: "Close",
+			clearButton: "Clear",
+			submitButton: "Submit",
+			"checkin-disabled": "Check-in disabled",
+			"checkout-disabled": "Check-out disabled",
+			"day-names-short": [
+				"sun",
+				"mon",
+				"tue",
+				"wed",
+				"thu",
+				"fri",
+				"sat"
+			],
+			"day-names": [
+				"Sunday",
+				"Monday",
+				"Tuesday",
+				"Wednesday",
+				"Thursday",
+				"Friday",
+				"Saturday"
+			],
+			"month-names-short": [
+				"Jan",
+				"Feb",
+				"Mar",
+				"Apr",
+				"May",
+				"Jun",
+				"Jul",
+				"Aug",
+				"Sep",
+				"Oct",
+				"Nov",
+				"Dec"
+			],
+			"month-names": [
+				"January",
+				"February",
+				"March",
+				"April",
+				"May",
+				"June",
+				"July",
+				"August",
+				"September",
+				"October",
+				"November",
+				"December"
+			],
+			"error-more": "Date range should not be more than 1 night",
+			"error-more-plural": "Date range should not be more than %d nights",
+			"error-less": "Date range should not be less than 1 night",
+			"error-less-plural": "Date range should not be less than %d nights",
+			"not selected": "Not selected",
+			"info-more": "Please select a date range of at least 1 night",
+			"info-more-plural": "Please select a date range of at least %d nights",
+			"info-range": "Please select a date range between %d and %d nights",
+			"info-range-equal": "Please select a date range of %d nights",
+			"info-default": "Please select a date range",
+			"aria-application": "Calendar",
+			"aria-selected-checkin": "Selected as check-in date, %s",
+			"aria-selected-checkout": "Selected as check-out date, %s",
+			"aria-selected": "Selected, %s",
+			"aria-disabled": "Not available, %s",
+			"aria-choose-checkin": "Choose %s as your check-in date",
+			"aria-choose-checkout": "Choose %s as your check-out date",
+			"aria-prev-month": "Move backward to the previous month",
+			"aria-next-month": "Move forward to the next month",
+			"aria-clear-button": "Clear the selected dates",
+			"select-checkout": "Select a check-out date",
+			"forward-only": "Please select a check-out date after check-in",
+			"same-day": "Check-out must be after check-in",
+			multiple: "The stay must be a multiple of %d nights",
+			unavailable: "This date range is not available"
+		}, y = o, b = _, x = p(null), S = `h-datepicker-${s()?.uid ?? "standalone"}`, C = p([]), w = p(!1), T = p(null), E = p(null), D = p(null), O = p(""), k = p(""), A = p(W(/* @__PURE__ */ new Date())), j = p({
+			show: !1,
+			top: 0,
+			left: 0,
+			width: 0,
+			count: 0,
+			error: !1
+		}), ie = t(() => ({
+			...v,
+			"day-names-short": y.weekDays,
+			"month-names": y.monthNames,
+			...y.i18n
+		})), M = t(() => ({
+			dayNamesShort: R("day-names-short", 7),
+			dayNames: R("day-names", 7),
+			monthNamesShort: R("month-names-short", 12),
+			monthNames: R("month-names", 12)
+		})), N = t(() => B(y.minDate) ?? B(/* @__PURE__ */ new Date())), P = t(() => B(y.maxDate)), ae = t(() => U(y.disabledDates || [])), oe = t(() => U(y.noCheckInDates)), se = t(() => U(y.noCheckOutDates)), ce = t(() => U(y.daysWithExtraText)), we = t(() => H(B(/* @__PURE__ */ new Date()))), Te = t(() => T.value && E.value ? je(T.value, E.value) : 0), Ee = t(() => Math.min(24, Math.max(2, Math.trunc(y.mobileMonths) || 12))), F = t(() => {
+			if (y.showSingleMonth) return 1;
+			if (w.value) {
+				let e = P.value;
+				return e ? Math.max(1, Math.min(Ee.value, q(A.value, e) + 1)) : Ee.value;
+			}
+			let e = y.showSingleMonth ? 1 : 2, t = P.value;
+			return t ? Math.max(1, Math.min(e, q(A.value, t) + 1)) : e;
+		}), I = t(() => Array.from({ length: F.value }, (e, t) => ze(K(A.value, t), t))), De = t(() => Ae(K(A.value, -1)).getTime() >= N.value.getTime()), Oe = t(() => {
+			let e = P.value;
+			return !e || K(A.value, 1).getTime() <= W(e).getTime();
+		}), ke = t(() => {
+			if (k.value) return k.value;
+			if (T.value && E.value) {
+				let e = Te.value === 1 ? L("night") : L("nights");
+				return `${L("selected")} ${V(T.value)}${y.separator}${V(E.value)} · ${Te.value} ${e}`;
+			}
+			return T.value ? Q("select-checkout") : L("info-default");
+		});
+		function L(e) {
+			let t = ie.value[e];
+			return typeof t == "string" ? t : "";
+		}
+		function R(e, t) {
+			let n = ie.value[e], r = v[e];
+			return Array.isArray(n) && n.length === t ? n : Array.isArray(r) ? r : [];
+		}
+		function z(e, t, n = "%s") {
+			return e.replace(n, String(t));
+		}
+		function B(e, t = y.format) {
+			if (e === !1 || e == null || e === "") return null;
+			let n;
+			return n = e instanceof Date ? new Date(e.getTime()) : typeof e == "number" ? new Date(e) : ue(e, t, M.value) ?? ue(e, "YYYY-MM-DD", M.value), !n || Number.isNaN(n.getTime()) ? null : new Date(n.getFullYear(), n.getMonth(), n.getDate(), 12);
+		}
+		function V(e, t = y.format) {
+			let n = B(e);
+			return n ? le(n, t, M.value) : "";
+		}
+		function H(e) {
+			let t = String(e.getMonth() + 1).padStart(2, "0"), n = String(e.getDate()).padStart(2, "0");
+			return `${e.getFullYear()}-${t}-${n}`;
+		}
+		function U(e) {
+			return new Set(e.map((e) => B(e)).filter((e) => !!e).map(H));
+		}
+		function W(e) {
+			return new Date(e.getFullYear(), e.getMonth(), 1, 12);
+		}
+		function Ae(e) {
+			return new Date(e.getFullYear(), e.getMonth() + 1, 0, 12);
+		}
+		function G(e, t) {
+			return new Date(e.getFullYear(), e.getMonth(), e.getDate() + t, 12);
+		}
+		function K(e, t) {
+			return new Date(e.getFullYear(), e.getMonth() + t, 1, 12);
+		}
+		function q(e, t) {
+			return (t.getFullYear() - e.getFullYear()) * 12 + t.getMonth() - e.getMonth();
+		}
+		function J(e) {
+			return Math.floor(Date.UTC(e.getFullYear(), e.getMonth(), e.getDate()) / 864e5);
+		}
+		function je(e, t) {
+			return Math.abs(J(t) - J(e));
+		}
+		function Y(e, t) {
+			return J(e) - J(t);
+		}
+		function X(e) {
+			if (Y(e, N.value) < 0) return !1;
+			let t = P.value;
+			return !t || Y(e, t) <= 0;
+		}
+		function Me(e, t) {
+			let n = e.getDay(), r = [
+				R("day-names-short", 7)[n],
+				R("day-names", 7)[n],
+				v["day-names-short"][n],
+				v["day-names"][n]
+			].map((e) => e.toLocaleLowerCase());
+			return t.some((e) => r.includes(String(e).toLocaleLowerCase()));
+		}
+		function Ne(e) {
+			return ae.value.has(H(e)) || Me(e, y.disabledDaysOfWeek);
+		}
+		function Pe(e) {
+			return Ne(e) || oe.value.has(H(e)) || Me(e, y.noCheckInDaysOfWeek);
+		}
+		function Fe(e) {
+			return se.value.has(H(e)) || Me(e, y.noCheckOutDaysOfWeek);
+		}
+		function Ie(e) {
+			return X(e) && !Pe(e);
+		}
+		function Z(e, t) {
+			let n = Y(e, t) <= 0 ? e : t, r = n === e ? t : e;
+			if (!Ie(n) || !X(r)) return Q("unavailable");
+			if (y.selectForward && Y(t, e) < 0) return Q("forward-only");
+			if (Fe(r)) return Q("checkout-disabled");
+			let i = je(n, r);
+			if (i === 0) return Q("same-day");
+			if (i < Math.max(1, y.minNights)) return Q("min", y.minNights);
+			if (y.maxNights > 0 && i > y.maxNights) return Q("max", y.maxNights);
+			if (y.minNightsMultiple && i % Math.max(1, y.minNights) !== 0) return Q("multiple", y.minNights);
+			for (let e = G(n, 1); Y(e, r) <= 0; e = G(e, 1)) if (Ne(e) && !(y.enableCheckout && Y(e, r) === 0)) return Q("unavailable");
+			return "";
+		}
+		function Q(e, t) {
+			return e === "min" ? z(L(t === 1 ? "error-less" : "error-less-plural"), t ?? 1, "%d") : e === "max" ? z(L(t === 1 ? "error-more" : "error-more-plural"), t ?? 1, "%d") : e === "checkout-disabled" ? L("checkout-disabled") : e === "select-checkout" ? L("select-checkout") : e === "forward-only" ? L("forward-only") : e === "same-day" ? L("same-day") : e === "multiple" ? z(L("multiple"), t ?? 1, "%d") : L("unavailable");
+		}
+		function Le(e) {
+			return T.value && !E.value ? Z(T.value, e) === "" : Ie(e);
+		}
+		function Re(e, t, n) {
+			let r = Math.min(J(t), J(n)), i = Math.max(J(t), J(n)), a = J(e);
+			return a >= r && a <= i;
+		}
+		function ze(e, t) {
+			let n = W(e), r = G(n, -(y.startOfWeek === "monday" ? (n.getDay() + 6) % 7 : n.getDay()));
+			return {
+				name: R("month-names", 12)[e.getMonth()] ?? "",
+				month: e.getMonth(),
+				year: e.getFullYear(),
+				id: `${e.getFullYear()}-${e.getMonth() + 1}`,
+				days: Array.from({ length: 42 }, (t, n) => Be(G(r, n), e)),
+				prevBtn: w.value ? t > 0 || De.value : t === 0 && De.value,
+				nextBtn: w.value ? t < F.value - 1 || Oe.value : t === F.value - 1 && Oe.value
+			};
+		}
+		function Be(e, t) {
+			let n = e.getMonth() === t.getMonth() && e.getFullYear() === t.getFullYear(), r = H(e), i = Ne(e), a = !!(T.value && !E.value && i && Z(T.value, e) === ""), o = !!(n && T.value && E.value && Re(e, T.value, E.value)), s = !!(n && T.value && !E.value && D.value && Re(e, T.value, D.value));
+			return {
+				date: e,
+				type: n ? "visibleMonth" : Y(e, t) < 0 ? "lastMonth" : "nextMonth",
+				day: e.getDate(),
+				time: e.getTime(),
+				tabindex: O.value === r ? 0 : -1,
+				attributes: [],
+				isCurrentMonth: n,
+				isValid: n && Le(e),
+				isNoCheckIn: Pe(e),
+				isNoCheckOut: Fe(e),
+				isToday: r === we.value,
+				isDisabled: i,
+				disabled: i,
+				isCheckOutEnabled: a,
+				isDayBeforeDisabledDate: Ne(G(e, 1)),
+				isCheckInOnly: Ie(e) && Fe(e),
+				isDayWithExtraText: ce.value.has(r),
+				isFirstDaySelected: r === (T.value ? H(T.value) : ""),
+				isLastDaySelected: r === (E.value ? H(E.value) : ""),
+				isSelected: o,
+				isHovering: s,
+				isTmpValid: !0,
+				isTmp: !1
+			};
+		}
+		function Ve() {
+			let e = R("day-names-short", 7);
+			return y.startOfWeek === "monday" ? [...e.slice(1), e[0]] : e;
+		}
+		function He(e) {
+			let t = V(e.date, y.ariaDayFormat);
+			return e.isFirstDaySelected ? z(L("aria-selected-checkin"), t) : e.isLastDaySelected ? z(L("aria-selected-checkout"), t) : e.isSelected ? z(L("aria-selected"), t) : e.isValid ? z(L(T.value && !E.value ? "aria-choose-checkout" : "aria-choose-checkin"), t) : z(L("aria-disabled"), t);
+		}
+		function Ue(e) {
+			if (!e.isCurrentMonth) return;
+			let t = B(e.date);
+			if (!T.value || E.value) {
+				if (!Ie(t)) return;
+				T.value = t, E.value = null, k.value = "", O.value = H(t), We();
+				return;
+			}
+			let n = Z(T.value, t);
+			if (n) {
+				k.value = n;
+				return;
+			}
+			let r = Y(T.value, t) <= 0 ? T.value : t, i = r === T.value ? t : T.value;
+			T.value = B(r), E.value = B(i), O.value = H(t), k.value = "", D.value = null, qe();
+			let a = {
+				start: T.value.getTime(),
+				end: E.value.getTime()
+			};
+			b("selected", a), b("select", a), We();
+		}
+		function We() {
+			let e = T.value ? V(T.value) : !1, t = E.value ? V(E.value) : !1;
+			b("update:startDate", e), b("update:endDate", t), b("change", {
+				start: e,
+				end: t
+			});
+		}
+		function Ge() {
+			T.value = null, E.value = null, D.value = null, k.value = "", We();
+		}
+		function Ke(e, t) {
+			if (w.value || !T.value || E.value || !t.isCurrentMonth) return;
+			D.value = B(t.date);
+			let n = x.value?.getBoundingClientRect(), r = e.currentTarget;
+			if (!n || !r) return;
+			let i = r.getBoundingClientRect();
+			j.value = {
+				show: !0,
+				top: i.top - n.top - 40,
+				left: i.left - n.left,
+				width: i.width,
+				count: je(T.value, t.date),
+				error: Z(T.value, t.date) !== ""
+			};
+		}
+		function qe() {
+			D.value = null, j.value.show = !1;
+		}
+		async function Je(e) {
+			if (w.value && e > 0) return Xe(e - 1);
+			De.value && (A.value = K(A.value, -1), await c(), w.value && Xe(0));
+		}
+		async function Ye(e) {
+			if (w.value && e < I.value.length - 1) return Xe(e + 1);
+			Oe.value && (A.value = K(A.value, 1), await c(), w.value && Xe(Math.min(e, I.value.length - 1)));
+		}
+		function Xe(e) {
+			C.value[e]?.scrollIntoView({
+				behavior: Ze() ? "auto" : "smooth",
+				block: "start"
+			});
+		}
+		function Ze() {
+			return typeof window < "u" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		}
+		function Qe(e, t) {
+			e instanceof HTMLElement && (C.value[t] = e);
+		}
+		async function $e(e, t) {
+			if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+				e.preventDefault(), Ue(t);
+				return;
+			}
+			let n = null, r = y.startOfWeek === "monday" ? (t.date.getDay() + 6) % 7 : t.date.getDay();
+			e.key === "ArrowRight" && (n = G(t.date, 1)), e.key === "ArrowLeft" && (n = G(t.date, -1)), e.key === "ArrowDown" && (n = G(t.date, 7)), e.key === "ArrowUp" && (n = G(t.date, -7)), e.key === "Home" && (n = G(t.date, -r)), e.key === "End" && (n = G(t.date, 6 - r)), e.key === "PageUp" && (n = et(t.date, -1)), e.key === "PageDown" && (n = et(t.date, 1)), n && (e.preventDefault(), await tt(n));
+		}
+		function et(e, t) {
+			let n = K(e, t);
+			return new Date(n.getFullYear(), n.getMonth(), Math.min(e.getDate(), Ae(n).getDate()), 12);
+		}
+		async function tt(e) {
+			if (!X(e)) return;
+			let t = K(A.value, F.value - 1);
+			(q(A.value, e) < 0 || q(e, t) < 0) && (A.value = W(e)), O.value = H(e), await c(), x.value?.querySelector(`[data-date="${H(e)}"]`)?.focus();
+		}
+		function nt() {
+			let e = Array.isArray(y.selectedDates) ? y.selectedDates : [], t = B(y.startDate || e[0]), n = B(y.endDate || e[1]);
+			T.value = t, E.value = t && n ? n : null, t && n && Y(t, n) > 0 && (T.value = n, E.value = t);
+			let r = T.value && X(T.value) ? T.value : N.value;
+			A.value = W(r), O.value = H(r), k.value = "";
+		}
+		function $() {
+			if (typeof window > "u") return;
+			let e = Number(y.singleMonthBreakpoint), t = y.singleMonthBreakpoint === !1 || !Number.isFinite(e) ? 768 : Math.max(320, e), n = x.value?.clientWidth || window.innerWidth;
+			w.value = Math.min(n, window.innerWidth) < t;
+		}
+		let rt = null;
+		return ne(() => [
+			y.startDate,
+			y.endDate,
+			y.selectedDates,
+			y.minDate,
+			y.maxDate,
+			y.format
+		], nt, {
+			deep: !0,
+			immediate: !0
+		}), ne(() => y.singleMonthBreakpoint, $), d(() => {
+			C.value = [];
+		}), ee(() => {
+			$(), typeof ResizeObserver < "u" && x.value ? (rt = new ResizeObserver($), rt.observe(x.value)) : window.addEventListener("resize", $, { passive: !0 });
+		}), te(() => {
+			rt?.disconnect(), window.removeEventListener("resize", $);
+		}), re({
+			clear: Ge,
+			getValues: () => ({
+				start: T.value ? V(T.value) : !1,
+				end: E.value ? V(E.value) : !1
+			}),
+			setRange: (e, t) => {
+				let n = B(e), r = B(t);
+				if (!n || !r) return !1;
+				let i = Z(n, r);
+				return i ? (k.value = i, !1) : (T.value = Y(n, r) <= 0 ? n : r, E.value = Y(n, r) <= 0 ? r : n, A.value = W(T.value), We(), !0);
+			}
+		}), (t, s) => (f(), r("section", {
+			ref_key: "root",
+			ref: x,
+			class: l(["h-datepicker h_datepicker", {
+				"h-datepicker--mobile": w.value,
+				h_datepicker_mobile: w.value,
+				"h-datepicker--topbar-bottom": o.topbarPosition === "bottom"
+			}]),
+			"aria-label": L("aria-application")
+		}, [
+			j.value.show ? (f(), r("div", {
+				key: 0,
+				class: l(["h-datepicker__popup h_datepicker_popup", { "h-datepicker__popup--error": j.value.error }]),
+				style: u({
+					top: `${j.value.top}px`,
+					left: `${j.value.left}px`,
+					width: `${j.value.width}px`
+				}),
+				role: "status"
+			}, [h(t.$slots, "popup", {
+				nights: j.value.count,
+				error: j.value.error
+			}, () => [a(g(j.value.count) + " " + g(j.value.count === 1 ? L("night") : L("nights")), 1)], !0)], 6)) : n("", !0),
+			o.showTopbar ? (f(), r("div", {
+				key: 1,
+				class: l(["h-datepicker__topbar", { "h-datepicker__topbar--error": k.value }]),
+				"aria-live": "polite"
+			}, [i("span", null, g(ke.value), 1), T.value ? (f(), r("button", {
+				key: 0,
+				type: "button",
+				class: "h-datepicker__clear",
+				"aria-label": L("aria-clear-button"),
+				onClick: Ge
+			}, g(L("clearButton")), 9, fe)) : n("", !0)], 2)) : n("", !0),
+			i("div", {
+				class: "h-datepicker__months h_datepicker_months",
+				"aria-label": L("aria-application")
+			}, [(f(!0), r(e, null, m(I.value, (c, u) => (f(), r("article", {
+				key: c.id,
+				ref_for: !0,
+				ref: (e) => Qe(e, u),
+				class: l(["h-datepicker__month h_datepicker_month", {
+					h_datepicker_one_month_display: I.value.length === 1,
+					h_datepicker_two_month_display: I.value.length === 2,
+					"h_datepicker_month-1": u === 0,
+					"h_datepicker_month-2": u === 1
+				}]),
+				"aria-labelledby": `${S}-month-${c.id}`
+			}, [i("header", he, [
+				i("button", {
+					type: "button",
+					class: l(["h-datepicker__month-control h_datepicker_month_control_btn", { "h-datepicker__month-control--hidden": !c.prevBtn }]),
+					disabled: !c.prevBtn,
+					"aria-label": L("aria-prev-month"),
+					onClick: (e) => Je(u)
+				}, [h(t.$slots, "prev", {}, () => [s[0] ||= i("span", { "aria-hidden": "true" }, "‹", -1)], !0)], 10, ge),
+				i("h2", {
+					id: `${S}-month-${c.id}`,
+					class: "h-datepicker__month-title h_datepicker_month_control_item",
+					"aria-live": "polite"
+				}, [h(t.$slots, "month", { month: c }, () => [a(g(c.name) + " " + g(c.year), 1)], !0)], 8, _e),
+				i("button", {
+					type: "button",
+					class: l(["h-datepicker__month-control h_datepicker_month_control_btn", { "h-datepicker__month-control--hidden": !c.nextBtn }]),
+					disabled: !c.nextBtn,
+					"aria-label": L("aria-next-month"),
+					onClick: (e) => Ye(u)
+				}, [h(t.$slots, "next", {}, () => [s[1] ||= i("span", { "aria-hidden": "true" }, "›", -1)], !0)], 10, ve)
+			]), i("div", {
+				class: "h-datepicker__grid h_datepicker_month_box",
+				role: "grid",
+				"aria-labelledby": `${S}-month-${c.id}`
+			}, [(f(!0), r(e, null, m(Ve(), (e) => (f(), r("div", {
+				key: e,
+				class: "h-datepicker__weekday h_datepicker_week_name",
+				role: "columnheader"
+			}, [h(t.$slots, "weekday", { weekday: e }, () => [a(g(e), 1)], !0)]))), 128)), (f(!0), r(e, null, m(c.days, (e) => (f(), r("div", {
+				key: `${c.id}-${H(e.date)}`,
+				class: "h-datepicker__cell",
+				role: "gridcell",
+				"aria-selected": e.isSelected
+			}, [e.isCurrentMonth ? (f(), r("button", {
+				key: 0,
+				type: "button",
+				class: l(["h-datepicker__day h_datepicker_day", {
+					"h-datepicker__day--valid": e.isValid,
+					"h-datepicker__day--invalid": !e.isValid,
+					"h-datepicker__day--disabled": e.isDisabled && !e.isCheckOutEnabled,
+					"h-datepicker__day--checkout-enabled": e.isCheckOutEnabled,
+					"h-datepicker__day--selected": e.isSelected,
+					"h-datepicker__day--range-start": e.isFirstDaySelected,
+					"h-datepicker__day--range-end": e.isLastDaySelected,
+					"h-datepicker__day--hovering": e.isHovering,
+					"h-datepicker__day--today": e.isToday,
+					h_datepicker_valid: e.isValid,
+					h_datepicker_invalid: !e.isValid,
+					h_datepicker_disabled: e.isDisabled,
+					h_datepicker_checkout_enabled: e.isCheckOutEnabled,
+					h_datepicker_checkout_disabled: !e.isCheckOutEnabled,
+					h_datepicker_checkin_enabled: !e.isNoCheckIn,
+					h_datepicker_checkin_disabled: e.isNoCheckIn,
+					h_datepicker_before_disabled_date: e.isDayBeforeDisabledDate,
+					h_datepicker_first_day_selected: e.isFirstDaySelected,
+					h_datepicker_last_day_selected: e.isLastDaySelected,
+					h_datepicker_selected: e.isSelected,
+					h_datepicker_hovering: e.isHovering
+				}]),
+				"aria-disabled": !e.isValid,
+				tabindex: e.tabindex,
+				"data-date": H(e.date),
+				"aria-label": He(e),
+				onClick: (t) => Ue(e),
+				onKeydown: (t) => $e(t, e),
+				onPointerenter: (t) => Ke(t, e),
+				onPointerleave: qe
+			}, [h(t.$slots, "day", { day: e }, () => [i("span", null, g(e.day), 1), e.isDayWithExtraText && o.extraDayText ? (f(), r("small", Se, g(o.extraDayText(e)), 1)) : n("", !0)], !0)], 42, xe)) : (f(), r("span", Ce))], 8, be))), 128))], 8, ye)], 10, me))), 128))], 8, pe)
+		], 10, de));
+	}
+}), [["__scopeId", "data-v-2dce60a3"]]);
+//#endregion
+export { we as default };

@@ -1,15 +1,16 @@
 import vue from "@vitejs/plugin-vue";
-import * as path from "path";
+import * as path from "node:path";
 import {defineConfig} from "vite";
 import dts from "vite-plugin-dts";
 
 export default defineConfig({
-    plugins: [vue()],
+    plugins: [vue(), dts()],
     build: {
         lib: {
-            entry: path.resolve(__dirname, "src/index.js"),
+            entry: path.resolve(import.meta.dirname, "src/index.ts"),
             name: "Vue3HotelDatePicker",
-            fileName: (format) => `index.${format}.js`,
+            fileName: (format) => format === "es" ? "index.es.js" : "index.umd.cjs",
+            cssFileName: "style",
         },
         rollupOptions: {
             external: ["vue"],
@@ -22,7 +23,7 @@ export default defineConfig({
     },
     resolve: {
         alias: {
-            "@": path.resolve(__dirname, "src")
+            "@": path.resolve(import.meta.dirname, "src")
         }
     }
 });
